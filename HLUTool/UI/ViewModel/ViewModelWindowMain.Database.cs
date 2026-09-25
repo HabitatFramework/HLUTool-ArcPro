@@ -50,7 +50,7 @@ namespace HLU.UI.ViewModel
     /// Database operations partial for ViewModelWindowMain.
     /// Contains: All database transactions, queries, table adapter operations, data persistence.
     /// </summary>
-    partial class ViewModelWindowMain
+    internal partial class ViewModelWindowMain
     {
         #region Fields
 
@@ -406,7 +406,7 @@ namespace HLU.UI.ViewModel
             {
                 // Show informational message that physical split can be performed if desired.
                 if (showMessage)
-                    ShowInfo($"{itemType}{(_currentIncidFragsInGISCount == 1 ? "" : "s")} may have been split in GIS but not physically split using HLU Tool.", Messagecategory);
+                    ShowInfo($"{itemType}{(_currentIncidFragsInGISCount == 1 ? "" : "s")} split in GIS but not physically split using HLU Tool.", Messagecategory);
             }
             // Check if there are multiple fragments in GIS that share the same incid and toid.
             // Physical merge is not applicable for point features.
@@ -416,7 +416,7 @@ namespace HLU.UI.ViewModel
             {
                 // Show informational message that physical merge can be performed if desired.
                 if (showMessage)
-                    ShowInfo("Selected features share the same INCID and TOID so a physical merge is possible.", MessageCategory.GIS);
+                    ShowInfo("Physical merge possible - selected features share the same INCID and TOID.", MessageCategory.GIS);
             }
             // Check if the GIS and database are in sync.
             else if ((_currentIncidToidsInGISCount > _currentIncidToidsInDBCount) ||
@@ -441,13 +441,16 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            if (Incid == null)
+                return false;
+
             if (IsBulkMode)
                 return true;
 
             if (_incidIhsMatrixRows == null)
             {
                 HluDataSet.incid_ihs_matrixDataTable ihsMatrixTable = _hluDS.incid_ihs_matrix;
-                GetIncidChildRowsDb([Incid],
+                _incidIhsMatrixRows = GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_matrixTableAdapter, ref ihsMatrixTable);
             }
 
@@ -481,13 +484,16 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            if (Incid == null)
+                return false;
+
             if (IsBulkMode)
                 return true;
 
             if (_incidIhsFormationRows == null)
             {
                 HluDataSet.incid_ihs_formationDataTable ihsFormationTable = _hluDS.incid_ihs_formation;
-                GetIncidChildRowsDb([Incid],
+                _incidIhsFormationRows = GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_formationTableAdapter, ref ihsFormationTable);
             }
             return _incidIhsFormationRows != null;
@@ -519,13 +525,16 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            if (Incid == null)
+                return false;
+
             if (IsBulkMode)
                 return true;
 
             if (_incidIhsManagementRows == null)
             {
                 HluDataSet.incid_ihs_managementDataTable ihsManagementTable = _hluDS.incid_ihs_management;
-                GetIncidChildRowsDb([Incid],
+                _incidIhsManagementRows = GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_managementTableAdapter, ref ihsManagementTable);
             }
 
@@ -558,13 +567,16 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            if (Incid == null)
+                return false;
+
             if (IsBulkMode)
                 return true;
 
             if (_incidIhsComplexRows == null)
             {
                 HluDataSet.incid_ihs_complexDataTable ihsComplexTable = _hluDS.incid_ihs_complex;
-                GetIncidChildRowsDb([Incid],
+                _incidIhsComplexRows = GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_complexTableAdapter, ref ihsComplexTable);
             }
 
@@ -1096,12 +1108,16 @@ namespace HLU.UI.ViewModel
         {
             List<string[]> errors = [];
 
+            Nullable<int> source1Id = IncidSource1Id;
+            Nullable<int> source2Id = IncidSource2Id;
+            Nullable<int> source3Id = IncidSource3Id;
+
             // Validate the source if it is real
-            if (IncidSource1Id != null && IncidSource1Id != Int32.MinValue)
+            if (source1Id != null && source1Id != Int32.MinValue)
             {
                 // Check the source id is found in the lookup table
                 EnumerableRowCollection<HluDataSet.lut_sourcesRow> rows =
-                    HluDataset.lut_sources.Where(r => r.source_id == IncidSource1Id);
+                    HluDataset.lut_sources.Where(r => r.source_id == source1Id);
                 if (!rows.Any())
                     errors.Add(["IncidSource1Id", "Error: Source name is mandatory for each source"]);
                 if (IncidSource1Date == null)
@@ -1145,8 +1161,8 @@ namespace HLU.UI.ViewModel
             {
                 // Validation for OSMM Bulk Update mode.
                 if ((IsOsmmBulkMode) &&
-                    (IncidSource2Id == null || IncidSource2Id == Int32.MinValue) &&
-                    (IncidSource3Id == null || IncidSource3Id == Int32.MinValue))
+                    (source2Id == null || source2Id == Int32.MinValue) &&
+                    (source3Id == null || source3Id == Int32.MinValue))
                     errors.Add([ "IncidSource1Id",
                         "Error: At least one source must be specified" ]);
                 if (IncidSource1Date != null)
@@ -1183,12 +1199,14 @@ namespace HLU.UI.ViewModel
         {
             List<string[]> errors = [];
 
+            Nullable<int> source2Id = IncidSource2Id;
+
             // Validate the source if it is real
-            if (IncidSource2Id != null && IncidSource2Id != Int32.MinValue)
+            if (source2Id != null && source2Id != Int32.MinValue)
             {
                 // Check the source id is found in the lookup table
                 EnumerableRowCollection<HluDataSet.lut_sourcesRow> rows =
-                    HluDataset.lut_sources.Where(r => r.source_id == IncidSource2Id);
+                    HluDataset.lut_sources.Where(r => r.source_id == source2Id);
                 if (!rows.Any())
                     errors.Add(["IncidSource1Id", "Error: Source name is mandatory for each source"]);
                 if (IncidSource2Date == null)
@@ -1264,12 +1282,14 @@ namespace HLU.UI.ViewModel
         {
             List<string[]> errors = [];
 
+            Nullable<int> source3Id = IncidSource3Id;
+
             // Validate the source if it is real
-            if (IncidSource3Id != null && IncidSource3Id != Int32.MinValue)
+            if (source3Id != null && source3Id != Int32.MinValue)
             {
                 // Check the source id is found in the lookup table
                 EnumerableRowCollection<HluDataSet.lut_sourcesRow> rows =
-                    HluDataset.lut_sources.Where(r => r.source_id == IncidSource3Id);
+                    HluDataset.lut_sources.Where(r => r.source_id == source3Id);
                 if (!rows.Any())
                     errors.Add(["IncidSource1Id", "Error: Source name is mandatory for each source"]);
                 if (IncidSource3Date == null)
@@ -2221,7 +2241,10 @@ namespace HLU.UI.ViewModel
                     if ((q != null) && (q.Length != 0))
                         primaryBap = q;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to determine mandatory primary BAP habitats for primary habitat '{primaryHabitat}': {ex.Message}", ex);
+                }
             }
 
             // Get the BAP habitats associated with all of the secondary habitats
@@ -2238,7 +2261,10 @@ namespace HLU.UI.ViewModel
                     if ((q != null) && (q.Length != 0))
                         secondaryBap = q;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to determine mandatory secondary BAP habitats: {ex.Message}", ex);
+                }
             }
 
             IEnumerable<string> allBap = null;
@@ -2455,13 +2481,22 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            // In Bulk Update / OSMM Bulk Update mode the current row is a detached
+            // placeholder row whose incid column is never populated, so it must be
+            // checked before (not after) the incid null-check below, otherwise the
+            // source fields would always be treated as invalid/disabled.
             if (IsBulkMode)
                 return true;
 
+            // Use IncidCurrentRow directly to avoid triggering the logged Incid property getter.
+            if ((IncidCurrentRow == null) || IncidCurrentRow.IsNull(HluDataset.incid.incidColumn))
+                return false;
+
             if (_incidSourcesRows == null)
             {
+                string incid = IncidCurrentRow.incid;
                 HluDataSet.incid_sourcesDataTable incidSourcesTable = _hluDS.incid_sources;
-                _incidSourcesRows = GetIncidChildRowsDb([Incid],
+                _incidSourcesRows = GetIncidChildRowsDb([incid],
                     _hluTableAdapterMgr.incid_sourcesTableAdapter, ref incidSourcesTable);
             }
             return _incidSourcesRows != null;
@@ -2667,13 +2702,14 @@ namespace HLU.UI.ViewModel
         /// Populates the specified incid_osmm_updatesDataTable with rows that match the provided filter conditions.
         /// </summary>
         /// <remarks>If no filter conditions are provided, the method does not modify the data table. The
-        /// method only operates when at least one filter group is specified.</remarks>
+        /// method only operates when at least one filter group is specified. Returns false if no rows were found.</remarks>
         /// <param name="whereClause">A collection of filter conditions used to select which rows are retrieved. Each inner list represents a
         /// group of conditions combined with logical AND; multiple groups are combined with logical OR. Cannot be null
         /// or empty.</param>
         /// <param name="table">A reference to the incid_osmm_updatesDataTable that will be filled with the matching rows. Must be a valid,
         /// initialized data table.</param>
-        internal void GetIncidOSMMUpdatesRows(List<List<SqlFilterCondition>> whereClause,
+        /// <returns>True if rows were found and loaded; false if no rows match the filter conditions.</returns>
+        internal bool GetIncidOSMMUpdatesRows(List<List<SqlFilterCondition>> whereClause,
             ref HluDataSet.incid_osmm_updatesDataTable table)
         {
             if ((whereClause != null) && (whereClause.Count > 0))
@@ -2682,8 +2718,18 @@ namespace HLU.UI.ViewModel
                         new HluTableAdapter<HluDataSet.incid_osmm_updatesDataTable,
                             HluDataSet.incid_osmm_updatesRow>(_db);
 
-                _hluTableAdapterMgr.incid_osmm_updatesTableAdapter.Fill(table, whereClause);
+                try
+                {
+                    int rowCount = _hluTableAdapterMgr.incid_osmm_updatesTableAdapter.Fill(table, whereClause);
+                    return rowCount > 0;
+                }
+                catch
+                {
+                    // If Fill fails (e.g., no rows found or database error), return false
+                    return false;
+                }
             }
+            return false;
         }
 
         #endregion Incid MM Polygons Operations
@@ -2746,7 +2792,7 @@ namespace HLU.UI.ViewModel
                 // Clear any existing GIS messages
                 ClearMessage(category: MessageCategory.GIS);
 
-                ChangeCursor(Cursors.Wait, "Validating ...");
+                ChangeCursor(Cursors.Wait, "Validating query ...");
 
                 // Select only the incid database table to use in the query.
                 List<DataTable> whereTables = [];
@@ -2805,13 +2851,15 @@ namespace HLU.UI.ViewModel
                 // not currently in Bulk Update mode).
                 if (IsFiltered)
                 {
+                    ChangeCursor(Cursors.Wait, "Counting expected features ...");
+
                     // Find the expected number of features to be selected in GIS.
                     _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
-                    ChangeCursor(Cursors.Wait, "Filtering ...");
+                    ChangeCursor(Cursors.Wait, "Applying filter ...");
 
                     // Select the required incid(s) in GIS.
                     if (await PerformGisSelectionAsync(true, _selectedFragsInDBCount, _selectedIncidsInDBCount))
@@ -2920,7 +2968,7 @@ namespace HLU.UI.ViewModel
         {
             try
             {
-                ChangeCursor(Cursors.Wait, "Validating ...");
+                ChangeCursor(Cursors.Wait, "Validating query ...");
 
                 // Select only the incid_osmm_updates database table to use in the query.
                 List<DataTable> whereTables = [];
@@ -2931,16 +2979,16 @@ namespace HLU.UI.ViewModel
                 sqlWhereClause = $"[incid_osmm_updates].incid LIKE '{_recIDs.SiteID}:%' AND [incid_osmm_updates].status <> -1";
 
                 // Add any other filter criteria.
-                if (processFlag != null && processFlag != _codeAnyRow)
+                if (processFlag != null && processFlag != _codeAny)
                     sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].process_flag = {1}", sqlWhereClause, processFlag);
 
-                if (spatialFlag != null && spatialFlag != _codeAnyRow)
+                if (spatialFlag != null && spatialFlag != _codeAny)
                     sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].spatial_flag = '{1}'", sqlWhereClause, spatialFlag);
 
-                if (changeFlag != null && changeFlag != _codeAnyRow)
+                if (changeFlag != null && changeFlag != _codeAny)
                     sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].change_flag = '{1}'", sqlWhereClause, changeFlag);
 
-                if (status != null && status != _codeAnyRow)
+                if (status != null && status != _codeAny)
                 {
                     int newStatus = status switch
                     {
@@ -2959,7 +3007,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Don't show pending or applied updates when no status filter is applied
-                if (status == null || status == _codeAnyRow)
+                if (status == null || status == _codeAny)
                     sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].status <> 0  AND [incid_osmm_updates].status <> -1", sqlWhereClause);
 
                 // Replace any connection type specific qualifiers and delimiters.
@@ -3015,13 +3063,15 @@ namespace HLU.UI.ViewModel
                 // Bulk Update mode), and the caller has requested to select the records in GIS.
                 if (IsFiltered && selectInGIS)
                 {
+                    ChangeCursor(Cursors.Wait, "Counting expected features ...");
+
                     // Find the expected number of features to be selected in GIS.
                     _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
-                    ChangeCursor(Cursors.Wait, "Filtering ...");
+                    ChangeCursor(Cursors.Wait, "Applying filter ...");
 
                     // Select the required incid(s) in GIS.
                     if (await PerformGisSelectionAsync(true, _selectedFragsInDBCount, _selectedIncidsInDBCount))
@@ -3389,6 +3439,12 @@ namespace HLU.UI.ViewModel
         /// <returns>The number of rows in the Incid table.</returns>
         public int IncidRowCount(bool recount)
         {
+            // Don't execute if required dependencies not yet initialized.
+            // Check individual dependencies rather than _initialised flag to allow
+            // this method to work during initial startup when called from InitializeToolPaneAsync.
+            if (_hluDS == null || _db == null || _recIDs == null)
+                return -1;
+
             if (recount || (_incidRowCount <= 0))
             {
                 try
@@ -3518,15 +3574,15 @@ namespace HLU.UI.ViewModel
                     RefreshSource2();
                     RefreshSource3();
                     RefreshHistory();
-                    }
+                }
 
-                    // Always notify the row index so the navigation counter stays
-                    // in sync even when the seek fails or no record was retrieved.
-                    OnPropertyChanged(nameof(IncidCurrentRowIndex));
-                    OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
+                // Always notify the row index so the navigation counter stays
+                // in sync even when the seek fails or no record was retrieved.
+                OnPropertyChanged(nameof(IncidCurrentRowIndex));
+                OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
 
-                    // Update the editing control state
-                    CheckEditingControlState();
+                // Update the editing control state
+                CheckEditingControlState();
             }
             catch (Exception ex)
             {

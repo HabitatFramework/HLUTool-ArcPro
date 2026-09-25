@@ -103,11 +103,13 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the ComboBox based on ReasonProcessEnabled and main window visibility.
-            bool reasonProcessEnabled = _viewModel.ReasonProcessEnabled && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = reasonProcessEnabled;
+            Enabled = _viewModel.ReasonProcessEnabled && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 Bulk Update mode is active\n\u2022 OSMM Review mode is active\n\u2022 The main window is not visible.";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 Bulk Update mode is active\n" +
+                "\u2022 OSMM Review mode is active\n" +
+                "\u2022 The main window is not visible.";
 
             // Update error state periodically to catch any changes
             UpdateErrorState();
@@ -187,7 +189,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         private void LoadReasons()
         {
-            if (_viewModel?.ReasonCodes?.Length != 0)
+            if (_viewModel?.ReasonCodes?.Length > 0)
             {
                 // Add new layers from the ViewModel.
                 foreach (var reasonCode in _viewModel.ReasonCodes)

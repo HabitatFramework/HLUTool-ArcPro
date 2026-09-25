@@ -28,7 +28,7 @@ namespace HLU.UI.ViewModel
     /// It provides support for property change notifications
     /// and has a DisplayName property. This class is abstract.
     /// </summary>
-    public abstract partial class PanelViewModelBase : DockPane, INotifyPropertyChanged, IDisposable
+    public abstract partial class ViewModelPanelBase : DockPane, INotifyPropertyChanged, IDisposable
     {
         #region Properties
 
@@ -131,14 +131,16 @@ namespace HLU.UI.ViewModel
         }
 
 #if DEBUG
+
         /// <summary>
         /// Useful for ensuring that ViewModel objects are properly garbage collected.
         /// </summary>
-        ~PanelViewModelBase()
+        ~ViewModelPanelBase()
         {
             string msg = string.Format("{0} ({1}) ({2}) Finalized", this.GetType().Name, this.DisplayName, this.GetHashCode());
             System.Diagnostics.Debug.WriteLine(msg);
         }
+
 #endif
 
         #endregion IDisposable Members

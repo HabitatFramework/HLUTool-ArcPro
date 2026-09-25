@@ -32,7 +32,9 @@ namespace HLU.Enums
         AttributeUpdate,
         BulkUpdate,
         OSMMUpdate,
-        FeatureInsert
+        FeatureInsert,
+        OSMMUnload,
+        OSMMLoad
     };
 
     #endregion Enums

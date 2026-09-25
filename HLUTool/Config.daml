@@ -5,7 +5,7 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
-	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="1.1.1" desktopVersion="3.4">
+	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="1.2.0" desktopVersion="3.4">
 		<Name>HLUTool</Name>
 		<Description>HLUTool provides a user-friendly interface for searching, displaying and updating habitat and land use attributes held in a relational database alongside spatial features in ArcGIS Pro. Key benefits include: validation of attribute compatibility; comprehensive history log for every change; simple query interface (e.g. all priority habitat features); reduced data volumes through relational data storage; data extraction in bespoke formats; and improved data retrieval and update performance for high-volume, complex data.</Description>
 		<Image>Images\AddInDesktop32.png</Image>
@@ -46,6 +46,8 @@
 					<group refID="HLUTool_Group_Selection" />
 					<group refID="HLUTool_Group_Topology" />
 					<group refID="HLUTool_Group_FeatureInsert" />
+					<group refID="HLUTool_Group_BulkLoadUnload"/>
+					<group refID="HLUTool_Group_Reassign" />
 					<group refID="HLUTool_Group_Export" />
 					<group refID="HLUTool_Group_Help" />
 				</tab>
@@ -82,7 +84,7 @@
 				<!-- ESRI Map Tools group -->
 				<group id="HLUTool_Group_MapTools" caption="Map Tools" keytip="G4">
 					<toolPalette refID="esri_mapping_selectToolPalette" />
-					<button refID="esri_mapping_clearSelectionButton" size="middle" separator="true" />
+					<button refID="esri_mapping_clearSelectionButton" size="middle" />
 					<button refID="esri_mapping_zoomToSelectionButton" size="middle" />
 				</group>
 
@@ -105,7 +107,7 @@
 				<!-- Selection group -->
 				<group id="HLUTool_Group_Selection" caption="Selection" keytip="G7">
 					<button refID="HLUTool_btnGetMapSelection" size="large" />
-					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" separator="true" />
+					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" />
 					<button refID="HLUTool_btnSelectFilteredIncids" size="middle" />
 					<button refID="HLUTool_btnAutoSelectOnGis" size="middle" />
 				</group>
@@ -121,10 +123,20 @@
 					<dynamicMenu refID="HLUTool_FeatureInsertMenu" size="large" />
 				</group>
 
-				<!-- Export group -->
-				<group id="HLUTool_Group_Export" caption="Export" keytip="G9" launcherButtonID="HLUTool_btnExportOptionsLauncher">
-					<button refID="HLUTool_btnExport" size="large" />
+				<!-- Bulk Load/Unload group -->
+				<group id="HLUTool_Group_BulkLoadUnload" caption="Bulk Load" keytip="GB">
+					<dynamicMenu refID="HLUTool_BulkLoadUnloadMenu" size="large" />
 				</group>
+
+				<!-- Reassign group -->
+				<group id="HLUTool_Group_Reassign" caption="Reassign" keytip="GR">
+					<button refID="HLUTool_btnReassign" size="large" />
+				</group>
+
+				<!-- Export group -->
+					<group id="HLUTool_Group_Export" caption="Export" keytip="G9" launcherButtonID="HLUTool_btnExportOptionsLauncher">
+						<button refID="HLUTool_btnExport" size="large" />
+					</group>
 
 				<!-- Help group -->
 				<group id="HLUTool_Group_Help" caption="Help" keytip="GI">
@@ -162,8 +174,7 @@
 						keytip="DY"
 						smallImage="pack://application:,,,/HLUTool;component/Images/HLUTool16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/HLUTool32.png">
-					<tooltip heading="HLU Tool"
-							 image="pack://application:,,,/HLUTool;component/Images/HLUTool16.png">
+					<tooltip heading="HLU Tool">
 						Manage habitat and land use data.<disabledText />
 					</tooltip>
 				</button>
@@ -232,6 +243,30 @@
 					</tooltip>
 				</dynamicMenu>
 
+				<button id="HLUTool_btnPhysicalSplit"
+						caption="Physical Split"
+						className="HLU.UI.UserControls.Toolbar.PhysicalSplitButton"
+						loadOnClick="false"
+						keytip="PS"
+						smallImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit32.png">
+					<tooltip heading="Physical Split">
+						Sub-divide a single feature, that has already been split in the active GIS layer, into one or more new fragments by assigning new fragment identifiers. The fragments can then be assigned different attributes (once they have been logically split from one another).
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnLogicalSplit"
+						caption="Logical Split"
+						className="HLU.UI.UserControls.Toolbar.LogicalSplitButton"
+						loadOnClick="false"
+						keytip="LS"
+						smallImage="pack://application:,,,/HLUTool;component/Images/LogicalSplit16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalSplit32.png">
+					<tooltip heading="Logical Split">
+						Split selected features from the current INCID into a new INCID. Used to isolate features from one INCID into a new INCID so that they can be updated independently.
+					</tooltip>
+				</button>
+
 				<!-- Merge dropdown: Physical + Logical -->
 				<dynamicMenu id="HLUTool_MergeMenu"
 							 caption="Merge"
@@ -243,6 +278,30 @@
 						Merge features physically or logically<disabledText />
 					</tooltip>
 				</dynamicMenu>
+
+				<button id="HLUTool_btnPhysicalMerge"
+						caption="Physical Merge"
+						className="HLU.UI.UserControls.Toolbar.PhysicalMergeButton"
+						loadOnClick="false"
+						keytip="PM"
+						smallImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge32.png">
+					<tooltip heading="Physical Merge">
+						Merge two or more fragments of a single TOID in the active GIS layer, that are also associated with the same INCID, into a new single feature and assigns them to the same fragment identifier.
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnLogicalMerge"
+						caption="Logical Merge"
+						className="HLU.UI.UserControls.Toolbar.LogicalMergeButton"
+						loadOnClick="false"
+						keytip="LM"
+						smallImage="pack://application:,,,/HLUTool;component/Images/LogicalMerge16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalMerge32.png">
+					<tooltip heading="Logical Merge">
+						Combine selected features into the INCID of one of those features (selected from the list of INCIDs displayed during the process).
+					</tooltip>
+				</button>
 
 				<!-- Feature Insert dropdown: Same INCID + Separate INCIDs -->
 				<dynamicMenu id="HLUTool_FeatureInsertMenu"
@@ -277,6 +336,44 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparate32.png">
 					<tooltip heading="Insert Feature — Separate INCIDs">
 						Register each selected new feature under its own new INCID. Use this when each created feature represents a distinct habitat record.
+					</tooltip>
+				</button>
+
+				<!-- Bulk Load dropdown: Unload + Load -->
+				<dynamicMenu id="HLUTool_BulkLoadUnloadMenu"
+							 caption="Bulk Load"
+							 className="HLU.UI.UserControls.Toolbar.BulkLoadUnloadDynamicMenu"
+							 smallImage="pack://application:,,,/HLUTool;component/Images/BulkData16.png"
+							 largeImage="pack://application:,,,/HLUTool;component/Images/BulkData32.png"
+							 loadOnClick="false">
+					<tooltip heading="Bulk Load options">
+						Bulk unload or load OSMM features<disabledText />
+					</tooltip>
+				</dynamicMenu>
+
+				<!-- OSMM Bulk Unload button -->
+				<button id="HLUTool_btnBulkUnload"
+						caption="Bulk Unload"
+						className="HLU.UI.UserControls.Toolbar.BulkUnloadButton"
+						loadOnClick="false"
+						keytip="BU"
+						smallImage="pack://application:,,,/HLUTool;component/Images/BulkUnload16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/BulkUnload32.png">
+					<tooltip heading="Bulk Unload">
+						Remove selected registered features from the HLU layers and clean up their database records.
+					</tooltip>
+				</button>
+
+				<!-- Bulk Load button -->
+				<button id="HLUTool_btnBulkLoad"
+						caption="Bulk Load"
+						className="HLU.UI.UserControls.Toolbar.BulkLoadButton"
+						loadOnClick="false"
+						keytip="BL"
+						smallImage="pack://application:,,,/HLUTool;component/Images/BulkLoad16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/BulkLoad32.png">
+					<tooltip heading="Bulk Load">
+						Register each selected new feature under its own new INCID using attributes matched to the OSMM cross-reference table.
 					</tooltip>
 				</button>
 
@@ -439,7 +536,7 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/SelectOnMap16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/SelectOnMap32.png">
 					<tooltip heading="Select Current Incid">
-						Select all of the features associated with only the current INCID record in the active GIS layer.
+						Select all of the features in the active GIS layer that are associated with the current INCID record only.
 						<disabledText>Available only when not in bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</button>
@@ -452,7 +549,7 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/SelectAllOnMap16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/SelectAllOnMap32.png">
 					<tooltip heading="Select Filtered INCIDs">
-						Select all of the features associated with all of the currently filtered INCID records in the active GIS layer.
+						Select all of the features in the active GIS layer that are associated with all of the currently filtered INCID records.
 						<disabledText>Available only when not in bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</button>
@@ -482,58 +579,6 @@
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnLogicalSplit"
-						caption="Logical Split"
-						className="HLU.UI.UserControls.Toolbar.LogicalSplitButton"
-						loadOnClick="false"
-						keytip="LS"
-						smallImage="pack://application:,,,/HLUTool;component/Images/LogicalSplit16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalSplit32.png">
-					<tooltip heading="Logical Split">
-						Split selected features from the current INCID into a new INCID. Used to isolate features from one INCID into a new INCID so that they can be updated independently.
-						<disabledText>Available only when not in bulk or OSMM Review mode, editing is active, and only a subset of features from one INCID is selected.</disabledText>
-					</tooltip>
-				</button>
-
-				<button id="HLUTool_btnLogicalMerge"
-						caption="Logical Merge"
-						className="HLU.UI.UserControls.Toolbar.LogicalMergeButton"
-						loadOnClick="false"
-						keytip="LM"
-						smallImage="pack://application:,,,/HLUTool;component/Images/LogicalMerge16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalMerge32.png">
-					<tooltip heading="Logical Merge">
-						Combine selected features into the INCID of one of those features (selected from the list of INCIDs displayed during the process).
-						<disabledText>Available only when not in bulk or OSMM Review mode, editing is active, and multiple features are selected from more than one INCID.</disabledText>
-					</tooltip>
-				</button>
-
-				<button id="HLUTool_btnPhysicalSplit"
-						caption="Physical Split"
-						className="HLU.UI.UserControls.Toolbar.PhysicalSplitButton"
-						loadOnClick="false"
-						keytip="PS"
-						smallImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit32.png">
-					<tooltip heading="Physical Split">
-						Sub-divide a single feature, that has already been split in the active GIS layer, into one or more new fragments by assigning new fragment identifiers. The fragments can then be assigned different attributes (once they have been logically split from one another).
-						<disabledText>Available only when not in bulk or OSMM Review mode, editing is active, and more than one feature is selected that share the same INCID, TOID, and fragment ID.</disabledText>
-					</tooltip>
-				</button>
-
-				<button id="HLUTool_btnPhysicalMerge"
-						caption="Physical Merge"
-						className="HLU.UI.UserControls.Toolbar.PhysicalMergeButton"
-						loadOnClick="false"
-						keytip="PM"
-						smallImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge32.png">
-					<tooltip heading="Physical Merge">
-						Merge two or more fragments of a single TOID in the active GIS layer, that are also associated with the same INCID, into a new single feature and assigns them to the same fragment identifier.
-						<disabledText>Available only when not in bulk or OSMM Review mode, editing is active, and multiple features are selected for the same INCID and TOID but different fragments.</disabledText>
-					</tooltip>
-				</button>
-
 				<button id="HLUTool_btnOptions"
 						caption="Options"
 						className="HLU.UI.UserControls.Toolbar.OptionsWindowButton"
@@ -543,6 +588,19 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
 					<tooltip heading="Tool Options">
 						View and update the application and user tool options.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnReassign"
+						caption="Reassign Features"
+						className="HLU.UI.UserControls.Toolbar.ReassignFeaturesButton"
+						loadOnClick="false"
+						keytip="RF"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Reassign16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Reassign32.png">
+					<tooltip heading="Reassign Features">
+						Reassign features to the correct HLU layer based on primary and secondary habitat codes.
+						<disabledText>Available only in normal edit mode with an editable active layer.</disabledText>
 					</tooltip>
 				</button>
 
@@ -568,7 +626,7 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/Options16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
 					<tooltip heading="Export Options">
-						Open Options window to configure export settings
+						Open Options window to configure export settings.
 					</tooltip>
 				</button>
 

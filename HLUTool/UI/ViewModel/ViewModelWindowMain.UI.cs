@@ -1,9 +1,9 @@
 // HLUTool is used to view and maintain habitat and land use GIS data.
-// Copyright � 2011 Hampshire Biodiversity Information Centre
-// Copyright � 2014 Sussex Biodiversity Record Centre
-// Copyright � 2019 London & South East Record Centres (LaSER)
-// Copyright � 2019-2022 Greenspace Information for Greater London CIC
-// Copyright � 2025-2026 Andy Foy Consulting
+// Copyright Â© 2011 Hampshire Biodiversity Information Centre
+// Copyright Â© 2014 Sussex Biodiversity Record Centre
+// Copyright Â© 2019 London & South East Record Centres (LaSER)
+// Copyright Â© 2019-2022 Greenspace Information for Greater London CIC
+// Copyright Â© 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -56,7 +56,7 @@ namespace HLU.UI.ViewModel
     /// UI-focused partial for ViewModelWindowMain.
     /// Contains: All bindable properties, UI state, visibility, formatting, commands, UI coordination.
     /// </summary>
-    partial class ViewModelWindowMain
+    internal partial class ViewModelWindowMain
     {
         #region Fields
 
@@ -71,6 +71,7 @@ namespace HLU.UI.ViewModel
 
         // DockPane fields
         private ViewModelWindowMain _dockPane;
+
         private const string _dockPaneID = "HLUTool_UI_WindowMain";
         private const string _dockPaneBaseCaption = "HLU Tool";
 
@@ -80,6 +81,7 @@ namespace HLU.UI.ViewModel
 
         // Habitat display fields
         private double _incidArea = -1;
+
         private double _incidLength = -1;
         private string _process;
         private string _reason;
@@ -93,6 +95,7 @@ namespace HLU.UI.ViewModel
 
         // IHS/Details display fields
         private string _incidIhsHabitat;
+
         private string _incidIhsSummary;
         private string _incidPrimary;
         private string _incidPrimaryCategory;
@@ -104,6 +107,7 @@ namespace HLU.UI.ViewModel
 
         // OSMM display fields
         private int _incidOSMMUpdatesOSMMXref;
+
         private int _incidOSMMUpdatesProcessFlag;
         private string _incidOSMMUpdatesSpatialFlag;
         private string _incidOSMMUpdatesChangeFlag;
@@ -111,12 +115,14 @@ namespace HLU.UI.ViewModel
 
         // OSMM UI State display fields
         private string _osmmAcceptTag = "A_ccept";
+
         private string _osmmRejectTag = "Re_ject";
         private Nullable<bool> _anyOSMMUpdates;
         private bool _osmmUpdatesEmpty = false;
 
         // Vague date display fields
         private VagueDateInstance _incidConditionDateEntered;
+
         private VagueDateInstance _incidSource1DateEntered;
         private VagueDateInstance _incidSource2DateEntered;
         private VagueDateInstance _incidSource3DateEntered;
@@ -160,6 +166,13 @@ namespace HLU.UI.ViewModel
 
         #endregion Fields - General
 
+        #region Fields - Debug
+
+        //private static readonly DateTime _getterStartTime = DateTime.Now;
+        //private static int _getterCallCount = 0;
+
+        #endregion Fields - Debug
+
         #region Fields - Ribbon Controls
 
         // ObservableCollection to hold HLU layers combo box items
@@ -171,7 +184,7 @@ namespace HLU.UI.ViewModel
 
         #region Fields - ComboBox Sources
 
-        private readonly ObservableCollection<CodeDescriptionBool> _primaryCodes = [];
+        private readonly BulkObservableCollection<CodeDescriptionBool> _primaryCodes = [];
         private bool _forceHabitatTypeRebuild;
 
         private HluDataSet.lut_sourcesRow[] _sourceNames;
@@ -512,12 +525,12 @@ namespace HLU.UI.ViewModel
             {
                 return Settings.Default.DisplayAreaUnits switch
                 {
-                    "m�" => "N0", // integer � m� values are large whole numbers
-                    "km�" => "N6", // small features are tiny fractions of km�
+                    "mÂ²" => "N0", // integer â€” mÂ² values are large whole numbers
+                    "kmÂ²" => "N6", // small features are tiny fractions of kmÂ²
                     "ha" => "N4", // standard precision for habitat mapping
                     "ac" => "N3", // common convention for acres
-                    "ft�" => "N0", // integer
-                    "mi�" => "N6", // small features are tiny fractions of mi�
+                    "ftÂ²" => "N0", // integer
+                    "miÂ²" => "N6", // small features are tiny fractions of miÂ²
                     _ => "N4"  // fallback
                 };
             }
@@ -805,9 +818,13 @@ namespace HLU.UI.ViewModel
                 if (_incidOSMMUpdatesOSMMXref <= 0)
                     return null;
 
+                // Return null if lookup table has been cleared during shutdown.
+                if (_lutOsmmHabitatXref == null)
+                    return null;
+
                 // Return the first proposed update primary code for this incid
                 // (there should only be one).
-                var q = from ohx in _lutOsmmHabitatXref
+                var q = from ohx in _lutOsmmHabitatXref ?? []
                         where ohx.osmm_xref_id == _incidOSMMUpdatesOSMMXref
                         select ohx.habitat_primary;
 
@@ -834,10 +851,15 @@ namespace HLU.UI.ViewModel
                 if (_incidOSMMUpdatesOSMMXref <= 0)
                     return null;
 
+                // Return null if lookup table has been cleared during shutdown.
+                if (_lutOsmmHabitatXref == null)
+                    return null;
+
                 // Return the first proposed update secondary codes for this incid
-                // (there should only be one).
-                var q = from ohx in _lutOsmmHabitatXref
+                // (there should only be one). Guard against DBNull in habitat_secondaries.
+                var q = from ohx in _lutOsmmHabitatXref ?? []
                         where ohx.osmm_xref_id == _incidOSMMUpdatesOSMMXref
+                              && !ohx.Ishabitat_secondariesNull()
                         select ohx.habitat_secondaries;
 
                 if (q.Any())
@@ -929,6 +951,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutReason == null)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 _reasonCodes ??= [.. _lutReason.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
@@ -944,6 +970,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutReason == null)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 _reasonCodes ??= [.. _lutReason.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
@@ -992,6 +1022,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutProcess == null)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 _processCodes ??= [.. _lutProcess.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
@@ -1007,6 +1041,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutProcess == null)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 _processCodes ??= [.. _lutProcess.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
@@ -1308,7 +1346,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutHabitatClass == null || !_lutHabitatClass.Any())
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutHabitatClass == null || !_lutHabitatClass.Any())
                     return null;
 
                 // Set the habitat classes for all local habitat classes with
@@ -1332,7 +1371,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutHabitatClass == null || !_lutHabitatClass.Any())
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutHabitatClass == null || !_lutHabitatClass.Any())
                     return null;
 
                 _habitatClassCodesWithNone ??= [_noneHabitatClassRow, .. HabitatClassCodes];
@@ -1386,6 +1426,10 @@ namespace HLU.UI.ViewModel
             }
             set
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null)
+                    return;
+
                 _habitatClass = value;
 
                 if (!String.IsNullOrEmpty(_habitatClass))
@@ -1421,6 +1465,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutHabitatType == null)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 if (!String.IsNullOrEmpty(_habitatClass))
                 {
@@ -1453,6 +1501,10 @@ namespace HLU.UI.ViewModel
             }
             set
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutHabitatType == null)
+                    return;
+
                 // Check if the habitat type has changed.
                 // _forceHabitatTypeRebuild is set when the active layer's geometry type changes
                 // so the codes are rebuilt without clearing the collection (which would trigger
@@ -1460,7 +1512,7 @@ namespace HLU.UI.ViewModel
                 if (string.Equals(_habitatType, value, StringComparison.Ordinal) && _primaryCodes != null && _primaryCodes.Count > 0 && !_forceHabitatTypeRebuild)
                     return;
 
-                // Reset the flag immediately � it is only valid for a single forced call.
+                // Reset the flag immediately â€” it is only valid for a single forced call.
                 _forceHabitatTypeRebuild = false;
 
                 // Set the reentrancy guard to prevent IncidPrimary setter from processing changes
@@ -1471,10 +1523,6 @@ namespace HLU.UI.ViewModel
 
                 // Preserve the current selection if it is still valid after refresh.
                 string previousIncidPrimary = _incidPrimary;
-
-                // Clear the current list without replacing the collection instance.
-                // Must be done on UI thread since _primaryCodes is an ObservableCollection.
-                Application.Current?.Dispatcher.Invoke(() => _primaryCodes.Clear());
 
                 if (!String.IsNullOrEmpty(_habitatType))
                 {
@@ -1498,7 +1546,7 @@ namespace HLU.UI.ViewModel
                     var habitatClassLookup = _lutHabitatClass.ToDictionary(hc => hc.code);
 
                     CodeDescriptionBool[] primaryCodes = [.. (
-                        // First query � directly matched primary codes
+                        // First query - directly matched primary codes
                         from p in _lutPrimary
                         where primaryCategoryLookup.ContainsKey(p.category) &&
                               habitatClassLookup.ContainsKey(p.habitat_class_code) &&
@@ -1523,7 +1571,7 @@ namespace HLU.UI.ViewModel
                             PrimaryCode = p.code
                         })
                     .Concat(
-                        // Second query � inferred primary codes via secondary links
+                        // Second query - inferred primary codes via secondary links
                         from s in _lutSecondary
                         where SecondaryMatchesLayerType(s)
                         join hts in _lutHabitatTypeSecondary on s.code equals hts.code_secondary
@@ -1571,7 +1619,12 @@ namespace HLU.UI.ViewModel
                             }
                             _primaryCodes.Add(item);
                         }
-                    });
+                    }
+
+                    // Replace the collection contents with a single Reset notification to
+                    // avoid O(N²) SelectedValue re-reads from WPF binding on each Add().
+                    Application.Current?.Dispatcher.Invoke(() =>
+                        _primaryCodes.Reset(primaryCodes.Where(c => !string.IsNullOrWhiteSpace(c.Code))));
 
                     // Load all secondary habitat codes where the habitat type has one of more
                     // optional codes, and the secondary habitat code relates to the current layer's
@@ -1624,11 +1677,8 @@ namespace HLU.UI.ViewModel
                             Preferred = false
                         })];
 
-                    Application.Current?.Dispatcher.Invoke(() =>
-                    {
-                        foreach (CodeDescriptionBool item in allPrimaryCodes)
-                            _primaryCodes.Add(item);
-                    });
+                    // Replace the collection contents with a single Reset notification.
+                    Application.Current?.Dispatcher.Invoke(() => _primaryCodes.Reset(allPrimaryCodes));
 
                     // Clear the list of optional and mandatory secondary codes.
                     _secondaryCodesOptional = [];
@@ -1665,12 +1715,11 @@ namespace HLU.UI.ViewModel
                 // IMPORTANT: no OnPropertyChanged(nameof(PrimaryCodes)) needed here anymore
                 // because the ItemsSource collection instance did not change.
 
-                // Clear the reentrancy guard after all property notifications are complete.
-                _refreshingHabitatType = false;
-
                 // Force WPF to re-sync the ComboBox SelectedValue binding by briefly
                 // nulling and restoring the value. This is necessary because WPF may
                 // have temporarily lost the selection match during the collection Clear/Add cycle.
+                // Keep _refreshingHabitatType = true so the IncidPrimary setter does not
+                // cascade into NewPrimaryHabitat/validation during these synthetic notifications.
                 if (preservedSelection != null)
                 {
                     string temp = _incidPrimary;
@@ -1681,6 +1730,10 @@ namespace HLU.UI.ViewModel
 
                 // Refresh selection + dependent UI.
                 OnPropertyChanged(nameof(IncidPrimary));
+
+                // Clear the reentrancy guard only after the synthetic IncidPrimary
+                // notifications are complete, so they cannot cascade into the setter.
+                _refreshingHabitatType = false;
             }
         }
 
@@ -1743,6 +1796,10 @@ namespace HLU.UI.ViewModel
             }
             set
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutHabitatTypePrimary == null)
+                    return;
+
                 // Skip setter processing during HabitatType refresh to prevent binding re-entry
                 // and spurious validation errors or Changed flag triggers.
                 if (_refreshingHabitatType)
@@ -1810,10 +1867,9 @@ namespace HLU.UI.ViewModel
                     // programmatic assignment (e.g. Adopt, Paste) updates the ComboBox even
                     // when the HabitatType setter was not involved (which is the only other
                     // place that fires this notification).
+                    // Note: NvcCodes and SecondaryGroupCodesValid are already fired by NewPrimaryHabitat().
                     OnPropertyChanged(nameof(IncidPrimary));
                     OnPropertyChanged(nameof(IncidPrimaryCategory));
-                    OnPropertyChanged(nameof(NvcCodes));
-                    OnPropertyChanged(nameof(SecondaryGroupCodesValid));
 
                     // Refresh the BAP habitat environments (in case secondary codes
                     // are, or should be, reflected).
@@ -2117,10 +2173,11 @@ namespace HLU.UI.ViewModel
 
                 // If there is a primary habitat code selected, set the list of valid secondary groups to
                 // those that relate to the primary code, otherwise set to all secondary groups.
-                if (!String.IsNullOrEmpty(IncidPrimary))
+                string primaryCode = IncidPrimary;
+                if (!String.IsNullOrEmpty(primaryCode))
                 {
                     // Get the primary habitat row for the selected primary code.
-                    var primaryRow = _lutPrimary?.FirstOrDefault(p => p.code == IncidPrimary);
+                    var primaryRow = _lutPrimary?.FirstOrDefault(p => p.code == primaryCode);
 
                     // Check if the primary habitat is a UKHAB code.
                     bool isUkhab = primaryRow != null &&
@@ -2138,7 +2195,7 @@ namespace HLU.UI.ViewModel
                         _secondaryGroupsValid = [.. (from sg in _lutSecondaryGroup
                                                  join s in _lutSecondary on sg.code equals s.code_group
                                                  join ps in _lutPrimarySecondary on s.code equals ps.code_secondary
-                                                 where (IncidPrimary == ps.code_primary || IncidPrimary.StartsWith(ps.code_primary))
+                                                 where (primaryCode == ps.code_primary || primaryCode.StartsWith(ps.code_primary))
                                                  select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct()];
 
                         if (_secondaryGroupsValid != null)
@@ -2247,13 +2304,13 @@ namespace HLU.UI.ViewModel
                     // If the primary/secondary codes must be valid
                     if (_primarySecondaryCodeValidation > 0)
                     {
-                        if (_secondaryGroup == "<All>")
+                        if (_secondaryGroup == _codeAll)
                         {
                             // Load all secondary habitat codes that are flagged as local for
                             // all secondary groups that relate to the primary habitat.
                             return _secondaryCodesValid;
                         }
-                        else if (_secondaryGroup == "<All Essentials>")
+                        else if (_secondaryGroup == _codeAllEssentials)
                         {
                             // Load all secondary habitat codes that are flagged as local for
                             // all secondary groups that relate to the primary habitat and
@@ -2269,13 +2326,13 @@ namespace HLU.UI.ViewModel
                     }
                     else
                     {
-                        if (_secondaryGroup == "<All>")
+                        if (_secondaryGroup == _codeAll)
                         {
                             // Load all secondary habitat codes that are flagged as local
                             // regardless of the primary habitat.
                             return _secondaryCodesAll;
                         }
-                        else if (_secondaryGroup == "<All Essentials>")
+                        else if (_secondaryGroup == _codeAllEssentials)
                         {
                             // Load all secondary habitat codes that are flagged as local
                             // regardless of the primary habitat and are essential.
@@ -2549,8 +2606,8 @@ namespace HLU.UI.ViewModel
                 {
                     // Define the <Clear> row
                     HluDataSet.lut_legacy_habitatRow clearRow = HluDataset.lut_legacy_habitat.Newlut_legacy_habitatRow();
-                    clearRow.code = _codeDeleteRow;
-                    clearRow.description = _codeDeleteRow;
+                    clearRow.code = _codeClear;
+                    clearRow.description = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -2584,7 +2641,7 @@ namespace HLU.UI.ViewModel
             {
                 if (IncidCurrentRow != null)
                 {
-                    bool clearCode = value == _codeDeleteRow;
+                    bool clearCode = value == _codeClear;
                     bool newCode = false;
                     if (clearCode)
                     {
@@ -3242,17 +3299,6 @@ namespace HLU.UI.ViewModel
             get
             {
                 return _incidIhsSummary;
-                //return ViewModelWindowMainHelpers.IhsSummary([
-                //    IncidIhsHabitat,
-                //    IncidIhsMatrix1,
-                //    IncidIhsMatrix2,
-                //    IncidIhsMatrix3,
-                //    IncidIhsFormation1,
-                //    IncidIhsFormation2,
-                //    IncidIhsManagement1,
-                //    IncidIhsManagement2,
-                //    IncidIhsComplex1,
-                //    IncidIhsComplex2 ]);
             }
         }
 
@@ -3726,8 +3772,8 @@ namespace HLU.UI.ViewModel
                 {
                     // Define the <Clear> row
                     HluDataSet.lut_conditionRow clearRow = HluDataset.lut_condition.Newlut_conditionRow();
-                    clearRow.code = _codeDeleteRow;
-                    clearRow.description = _codeDeleteRow;
+                    clearRow.code = _codeClear;
+                    clearRow.description = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -3768,7 +3814,7 @@ namespace HLU.UI.ViewModel
             {
                 if (IncidCurrentRow != null)
                 {
-                    bool clearCode = value == _codeDeleteRow;
+                    bool clearCode = value == _codeClear;
                     bool newCode = false;
                     if (clearCode)
                         value = null;
@@ -3940,8 +3986,8 @@ namespace HLU.UI.ViewModel
                 {
                     // Define the <Clear> row
                     HluDataSet.lut_quality_determinationRow clearRow = HluDataset.lut_quality_determination.Newlut_quality_determinationRow();
-                    clearRow.code = _codeDeleteRow;
-                    clearRow.description = _codeDeleteRow;
+                    clearRow.code = _codeClear;
+                    clearRow.description = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -3973,7 +4019,7 @@ namespace HLU.UI.ViewModel
             {
                 if (IncidCurrentRow != null)
                 {
-                    bool clearCode = value == _codeDeleteRow;
+                    bool clearCode = value == _codeClear;
                     bool newCode = false;
                     if (clearCode)
                         value = null;
@@ -4014,8 +4060,8 @@ namespace HLU.UI.ViewModel
                 {
                     // Define the <Clear> row
                     HluDataSet.lut_quality_interpretationRow clearRow = HluDataset.lut_quality_interpretation.Newlut_quality_interpretationRow();
-                    clearRow.code = _codeDeleteRow;
-                    clearRow.description = _codeDeleteRow;
+                    clearRow.code = _codeClear;
+                    clearRow.description = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -4047,7 +4093,7 @@ namespace HLU.UI.ViewModel
             {
                 if (IncidCurrentRow != null)
                 {
-                    bool clearCode = value == _codeDeleteRow;
+                    bool clearCode = value == _codeClear;
                     bool newCode = false;
                     if (clearCode)
                         value = null;
@@ -4247,7 +4293,7 @@ namespace HLU.UI.ViewModel
                     // Define the <Clear> row
                     HluDataSet.lut_sourcesRow clearRow = HluDataset.lut_sources.Newlut_sourcesRow();
                     clearRow.source_id = -1;
-                    clearRow.source_name = _codeDeleteRow;
+                    clearRow.source_name = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -4430,15 +4476,16 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Get the list of values from the lookup table.
-                if (!String.IsNullOrEmpty(IncidSource1HabitatClass))
+                string habitatClass1 = IncidSource1HabitatClass;
+                if (!String.IsNullOrEmpty(habitatClass1))
                 {
                     // Load the habitat types for the selected habitat class.
                     HluDataSet.lut_habitat_typeRow[] retArray = [.. _lutHabitatType
-                        .Where(r => r.habitat_class_code == IncidSource1HabitatClass)
+                        .Where(r => r.habitat_class_code == habitatClass1)
                         .OrderBy(r => r.sort_order).ThenBy(r => r.name)];
 
-                    // Set the habitat type if there is only one
-                    if ((retArray.Length == 1) && (IncidSource1Id != null))
+                    // Set the habitat type if there is only one and not already set
+                    if ((retArray.Length == 1) && (IncidSource1Id != null) && (IncidSource1HabitatType == null))
                     {
                         IncidSource1HabitatType = retArray[0].code;
                         OnPropertyChanged(nameof(IncidSource1HabitatType));
@@ -4569,7 +4616,7 @@ namespace HLU.UI.ViewModel
                     // Define the <Clear> row
                     HluDataSet.lut_sourcesRow clearRow = HluDataset.lut_sources.Newlut_sourcesRow();
                     clearRow.source_id = -1;
-                    clearRow.source_name = _codeDeleteRow;
+                    clearRow.source_name = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -4747,15 +4794,16 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Get the list of values from the lookup table
-                if (!String.IsNullOrEmpty(IncidSource2HabitatClass))
+                string habitatClass2 = IncidSource2HabitatClass;
+                if (!String.IsNullOrEmpty(habitatClass2))
                 {
                     // Load the habitat types for the selected habitat class.
                     HluDataSet.lut_habitat_typeRow[] retArray = [.. _lutHabitatType
-                        .Where(r => r.habitat_class_code == IncidSource2HabitatClass)
+                        .Where(r => r.habitat_class_code == habitatClass2)
                         .OrderBy(r => r.sort_order).ThenBy(r => r.name)];
 
-                    // Set the habitat type if there is only one
-                    if ((retArray.Length == 1) && (IncidSource2Id != null))
+                    // Set the habitat type if there is only one and not already set
+                    if ((retArray.Length == 1) && (IncidSource2Id != null) && (IncidSource2HabitatType == null))
                     {
                         IncidSource2HabitatType = retArray[0].code;
                         OnPropertyChanged(nameof(IncidSource2HabitatType));
@@ -4768,7 +4816,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the source 2 habitat type code. Setting this property will update the source_habitat_type field
+        /// Gets or sets the source 2 habitat type code.
         /// in the incid_sources table for source 2.
         /// </summary>
         /// <value>The source 2 habitat type code.</value>
@@ -4823,7 +4871,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the source 2 habitat importance code. Setting this property will update the source_habitat_importance field
+        /// Gets or sets the source 2 habitat importance code.
         /// in the incid_sources table for source 2.
         /// </summary>
         /// <value>The source 2 habitat importance code.</value>
@@ -4886,7 +4934,7 @@ namespace HLU.UI.ViewModel
                     // Define the <Clear> row
                     HluDataSet.lut_sourcesRow clearRow = HluDataset.lut_sources.Newlut_sourcesRow();
                     clearRow.source_id = -1;
-                    clearRow.source_name = _codeDeleteRow;
+                    clearRow.source_name = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the clear row
@@ -5089,15 +5137,16 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Get the list of values from the lookup table
-                if (!String.IsNullOrEmpty(IncidSource3HabitatClass))
+                string habitatClass3 = IncidSource3HabitatClass;
+                if (!String.IsNullOrEmpty(habitatClass3))
                 {
                     // Load the habitat types for the selected habitat class.
                     HluDataSet.lut_habitat_typeRow[] retArray = [.. _lutHabitatType
-                        .Where(r => r.habitat_class_code == IncidSource3HabitatClass)
+                        .Where(r => r.habitat_class_code == habitatClass3)
                         .OrderBy(r => r.sort_order).ThenBy(r => r.name)];
 
-                    // Set the habitat type if there is only one
-                    if ((retArray.Length == 1) && (IncidSource3Id != null))
+                    // Set the habitat type if there is only one and not already set
+                    if ((retArray.Length == 1) && (IncidSource3Id != null) && (IncidSource3HabitatType == null))
                     {
                         IncidSource3HabitatType = retArray[0].code;
                         OnPropertyChanged(nameof(IncidSource3HabitatType));
@@ -5786,6 +5835,28 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Properties - Export
+
+        #region Properties - Reassign
+
+        /// <summary>
+        /// Gets a value indicating whether the Reassign Features process can be started.
+        /// The button is enabled only when the tool is in normal edit mode (not bulk or OSMM
+        /// Review mode), the database is loaded, and the active HLU layer is editable.
+        /// </summary>
+        /// <value><c>true</c> if the reassign process can be started; otherwise, <c>false</c>.</value>
+        public bool CanReassign
+        {
+            get
+            {
+                return IsEditMode &&
+                       IsNotBulkMode &&
+                       IsNotOsmmReviewMode &&
+                       _hluDS != null &&
+                       _gisApp?.ActiveHluLayer?.IsEditable == true;
+            }
+        }
+
+        #endregion Properties - Reassign
 
         #region Properties - Filter
 
@@ -7382,7 +7453,7 @@ namespace HLU.UI.ViewModel
                             CloseParentheses = ")"
                         };
 
-                        // Reset cached secondary code lists � they are filtered by geometry type
+                        // Reset cached secondary code lists â€” they are filtered by geometry type
                         // and must be rebuilt for the new layer type.
                         _secondaryCodesAll = null;
                         _secondaryCodesValid = null;
@@ -7396,8 +7467,8 @@ namespace HLU.UI.ViewModel
 
                         // The HabitatType setter may have nulled _incidPrimary when the current
                         // primary code is absent from the rebuilt list for the new geometry type.
-                        // Restore it from the incid row so that IsDirtyIncid() � which compares
-                        // _incidPrimary against _incidCurrentRow.habitat_primary � does not see a
+                        // Restore it from the incid row so that IsDirtyIncid() â€” which compares
+                        // _incidPrimary against _incidCurrentRow.habitat_primary â€” does not see a
                         // discrepancy and falsely mark the record as changed, triggering the
                         // "record has been changed" dialog on every layer switch.
                         // The validation in this["IncidPrimary"] will detect that the restored code
@@ -7413,6 +7484,11 @@ namespace HLU.UI.ViewModel
                     // Always force a recount to update _incidRowCount, even when geometry didn't change.
                     // This ensures StatusIncid shows the correct total for the active layer.
                     IncidRowCount(true);
+
+                    // Check for any pending OSMM updates after the geometry type has changed.
+                    // This ensures CanOSMMReviewMode and CanOSMMBulkUpdateMode are correctly
+                    // enabled/disabled for the new layer type.
+                    await CheckAnyOSMMUpdatesAsync();
 
                     // Set the active HLU layer name.
                     ActiveLayerName = selectedValue;
@@ -7664,6 +7740,7 @@ namespace HLU.UI.ViewModel
             RefreshSources();
             RefreshHistory();
         }
+
         /// <summary>
         /// Refreshes the state of combo box sources, ensuring that any bound user interface elements reflect the current data.
         /// </summary>
@@ -7748,6 +7825,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(CanFilterByAttributes));
             OnPropertyChanged(nameof(CanClearFilter));
             OnPropertyChanged(nameof(CanExport));
+            OnPropertyChanged(nameof(CanReassign));
 
             // Update the editing control state
             CheckEditingControlState();
@@ -8027,7 +8105,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(Source1Names));
             OnPropertyChanged(nameof(IncidSource1Date));
             OnPropertyChanged(nameof(IncidSource1HabitatClass));
-            OnPropertyChanged(nameof(IncidSource1HabitatType));
+            OnPropertyChanged(nameof(IncidSource1HabitatType)); // This is needed to avoid alternating errors
             OnPropertyChanged(nameof(Source1HabitatTypeCodes));
             OnPropertyChanged(nameof(IncidSource1HabitatType));
             OnPropertyChanged(nameof(IncidSource1BoundaryImportance));
@@ -8045,7 +8123,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(Source2Names));
             OnPropertyChanged(nameof(IncidSource2Date));
             OnPropertyChanged(nameof(IncidSource2HabitatClass));
-            OnPropertyChanged(nameof(IncidSource2HabitatType));
+            OnPropertyChanged(nameof(IncidSource2HabitatType)); // This is needed to avoid alternating errors
             OnPropertyChanged(nameof(Source2HabitatTypeCodes));
             OnPropertyChanged(nameof(IncidSource2HabitatType));
             OnPropertyChanged(nameof(IncidSource2BoundaryImportance));
@@ -8063,7 +8141,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(Source3Names));
             OnPropertyChanged(nameof(IncidSource3Date));
             OnPropertyChanged(nameof(IncidSource3HabitatClass));
-            OnPropertyChanged(nameof(IncidSource3HabitatType));
+            OnPropertyChanged(nameof(IncidSource3HabitatType)); // This is needed to avoid alternating errors
             OnPropertyChanged(nameof(Source3HabitatTypeCodes));
             OnPropertyChanged(nameof(IncidSource3HabitatType));
             OnPropertyChanged(nameof(IncidSource3BoundaryImportance));
@@ -8259,8 +8337,8 @@ namespace HLU.UI.ViewModel
             if (_selectedIncidsInGISCount <= 0)
             {
                 // Ask the user before re-selecting the current incid features in GIS.
-                if (MessageBox.Show("There are no features selected in the GIS.\n" +
-                            "Would you like to apply the changes to all features for this incid?", "HLU: Save",
+                if (MessageBox.Show("There are no features selected in the GIS.\n\n" +
+                            "Apply the changes to all features for this incid?", "HLU: Save",
                             MessageBoxButton.YesNoCancel, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
                     // Set the status to processing and the cursor to wait.
@@ -8350,7 +8428,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            ChangeCursor(Cursors.Wait, "Filtering ...");
+            ChangeCursor(Cursors.Wait, "Applying filter ...");
 
             // Initialise the GIS selection table.
             _gisSelection = NewGisSelectionTable();
@@ -8411,7 +8489,7 @@ namespace HLU.UI.ViewModel
                     if (_updateAllFeatures == false)
                     {
                         // Set the status to processing and the cursor to wait.
-                        ChangeCursor(Cursors.Wait, "Splitting ...");
+                        ChangeCursor(Cursors.Wait, "Splitting features ...");
 
                         // Create ViewModel for split class.
                         ViewModelWindowMainSplit vmSplit = new(this);
@@ -8954,9 +9032,9 @@ namespace HLU.UI.ViewModel
                 // Parse and add each proposed secondary code.
                 if (!string.IsNullOrWhiteSpace(proposedSecondaries))
                 {
-                    // Split on whitespace, commas, and common connectives � same approach as ExpandSuggestedCodes.
-                        string[] tokens = OsmmSecondariesSplitRegex()
-                            .Split(proposedSecondaries.Replace('[', ' ').Replace(']', ' '));
+                    // Split on whitespace, commas, and common connectives â€” same approach as ExpandSuggestedCodes.
+                    string[] tokens = OsmmSecondariesSplitRegex()
+                        .Split(proposedSecondaries.Replace('[', ' ').Replace(']', ' '));
 
                     foreach (string token in tokens)
                     {
@@ -9266,7 +9344,7 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                ChangeCursor(Cursors.Wait, "Validating ...");
+                ChangeCursor(Cursors.Wait, "Validating query ...");
 
                 await Task.Yield();
 
@@ -9349,7 +9427,7 @@ namespace HLU.UI.ViewModel
                 // not currently in Bulk Update mode).
                 if (IsFiltered)
                 {
-                    ChangeCursor(Cursors.Wait, "Counting ...");
+                    ChangeCursor(Cursors.Wait, "Counting expected features ...");
 
                     // Find the expected number of features to be selected from the database.
                     _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
@@ -9371,7 +9449,7 @@ namespace HLU.UI.ViewModel
 
                     if (_selectedIncidsInGISCount > 0)
                     {
-                        ChangeCursor(Cursors.Wait, "Filtering ...");
+                        ChangeCursor(Cursors.Wait, "Applying filter ...");
 
                         // Indicate the selection didn't come from the map.
                         _filteredByMap = false;
@@ -9390,7 +9468,7 @@ namespace HLU.UI.ViewModel
                         // Clear the selection (filter).
                         _incidSelection = null;
 
-                        ChangeCursor(Cursors.Wait, "Filtering ...");
+                        ChangeCursor(Cursors.Wait, "Applying filter ...");
 
                         // Indicate the selection didn't come from the map.
                         _filteredByMap = false;
@@ -9460,7 +9538,7 @@ namespace HLU.UI.ViewModel
 
                 // Create ViewModel to which main window binds
                 _viewModelWinWarnGISSelect = new ViewModelWindowWarnOnGISSelect(
-                    expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : HluGeometryTypes.Unknown, _warnBeforeMaxFeatures);
+                    expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : HluGeometryTypes.Unknown);
 
                 // When ViewModel asks to be closed, close window
                 _viewModelWinWarnGISSelect.RequestClose -= ViewModelWinWarnGISSelect_RequestClose; // Safety: avoid double subscription.
@@ -9492,8 +9570,13 @@ namespace HLU.UI.ViewModel
             _viewModelWinWarnGISSelect.RequestClose -= ViewModelWinWarnGISSelect_RequestClose;
             _windowWarnGISSelect.Close();
 
-            // Update the user warning count threshold in case it was changed in the options within the warning window.
-            _warnBeforeMaxFeatures = Settings.Default.MaxFeaturesGISSelect;
+            // Refresh the warn/join threshold in case settings were saved during the dialog.
+            _warnBeforeMaxFeatures = Math.Clamp(
+                Settings.Default.GdbJoinThreshold,
+                Settings.Default.GdbJoinThresholdMin,
+                Settings.Default.GdbJoinThresholdMax);
+            if (_gisApp != null)
+                _gisApp.GdbJoinThreshold = _warnBeforeMaxFeatures;
 
             // If the user doesn't wish to proceed then clear the
             // current incid filter.
@@ -9705,7 +9788,7 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                ChangeCursor(Cursors.Wait, "Validating ...");
+                ChangeCursor(Cursors.Wait, "Validating query ...");
 
                 // Get a list of all the possible query tables.
                 List<DataTable> tables = [];
@@ -9798,13 +9881,15 @@ namespace HLU.UI.ViewModel
                     // not currently in Bulk Update mode).
                     if (IsFiltered)
                     {
+                        ChangeCursor(Cursors.Wait, "Counting expected features ...");
+
                         // Find the expected number of features to be selected in GIS.
                         _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                         // Store the number of incids found in the database
                         _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
-                        ChangeCursor(Cursors.Wait, "Filtering ...");
+                        ChangeCursor(Cursors.Wait, "Applying filter ...");
 
                         // Select the required incid(s) in GIS.
                         if (await PerformGisSelectionAsync(true, _selectedFragsInDBCount, _selectedIncidsInDBCount))
@@ -10111,38 +10196,38 @@ namespace HLU.UI.ViewModel
                         else
                             errorCodes.Add(secondaryHabitat);
                     }
+                }
 
-                    // If any valid codes were entered and were added to the table
-                    if (addedCodes == true)
-                    {
-                        // Refresh secondary table and summary.
-                        RefreshSecondaryHabitats();
-                        OnPropertyChanged(nameof(IncidSecondarySummary));
+                // If any valid codes were entered and were added to the table
+                if (addedCodes == true)
+                {
+                    // Refresh secondary table and summary.
+                    RefreshSecondaryHabitats();
+                    OnPropertyChanged(nameof(IncidSecondarySummary));
 
-                        // Refresh the BAP habitat environments (in case secondary codes
-                        // are, or should be, reflected).
-                        GetBapEnvironments();
-                        OnPropertyChanged(nameof(IncidBapHabitatsAuto));
-                        OnPropertyChanged(nameof(IncidBapHabitatsUser));
-                        OnPropertyChanged(nameof(BapHabitatsAutoEnabled));
-                        OnPropertyChanged(nameof(BapHabitatsUserEnabled));
-                    }
+                    // Refresh the BAP habitat environments (in case secondary codes
+                    // are, or should be, reflected).
+                    GetBapEnvironments();
+                    OnPropertyChanged(nameof(IncidBapHabitatsAuto));
+                    OnPropertyChanged(nameof(IncidBapHabitatsUser));
+                    OnPropertyChanged(nameof(BapHabitatsAutoEnabled));
+                    OnPropertyChanged(nameof(BapHabitatsUserEnabled));
+                }
 
-                    // If any codes were invalid then tell the user
-                    if (errorCodes != null && errorCodes.Count > 0)
-                    {
-                        // Sort the distinct secondary codes in error numerically
-                        errorCodes = [.. errorCodes.Distinct().OrderBy(e => e.PadLeft(5, '0'))];
-                        // Message the user, depending on if there is one or more
-                        if (errorCodes.Count == 1)
-                            ShowWarning("Code '" +
-                                errorCodes.FirstOrDefault() + "' is a duplicate/unknown and has not been added.",
-                                MessageCategory.Update);
-                        else
-                            ShowWarning("Codes '" +
-                                String.Join(", ", errorCodes.Take(errorCodes.Count - 1)) + " and " + errorCodes.Last() + "' are duplicates/unknown and have not been added.",
-                                MessageCategory.Update);
-                    }
+                // If any codes were invalid then tell the user
+                if (errorCodes != null && errorCodes.Count > 0)
+                {
+                    // Sort the distinct secondary codes in error numerically
+                    errorCodes = [.. errorCodes.Distinct().OrderBy(e => e.PadLeft(5, '0'))];
+                    // Message the user, depending on if there is one or more
+                    if (errorCodes.Count == 1)
+                        ShowWarning("Code '" +
+                            errorCodes.FirstOrDefault() + "' is a duplicate/unknown and has not been added.",
+                            MessageCategory.Update);
+                    else
+                        ShowWarning("Codes '" +
+                            String.Join(", ", errorCodes.Take(errorCodes.Count - 1)) + " and " + errorCodes.Last() + "' are duplicates/unknown and have not been added.",
+                            MessageCategory.Update);
                 }
             }
             catch (Exception ex)
@@ -10329,7 +10414,7 @@ namespace HLU.UI.ViewModel
             if (IsNotBulkMode && IsNotOsmmReviewMode)
             {
                 // Can switch if there is more than one map layer.
-                if (_gisApp.HluLayerCount > 1)
+                if (_gisApp?.HluLayerCount > 1)
                 {
                     // Enable the combo box.
                     ActiveLayerComboBox.GetInstance()?.UpdateState(true);
@@ -10462,33 +10547,34 @@ namespace HLU.UI.ViewModel
             switch (_gisLayerType)
             {
                 case HluGeometryTypes.Line:
-                {
-                    // For line geometries, only calculate length measures.
-                    HluDataSet.incid_mm_linesDataTable table = HluDataset.incid_mm_lines;
-                    GetIncidMMLineRows(incidCondList, ref table);
-                    foreach (HluDataSet.incid_mm_linesRow r in table)
-                        _incidLength += r.shape_length;
-                    break;
-                }
+                    {
+                        // For line geometries, only calculate length measures.
+                        HluDataSet.incid_mm_linesDataTable table = HluDataset.incid_mm_lines;
+                        GetIncidMMLineRows(incidCondList, ref table);
+                        foreach (HluDataSet.incid_mm_linesRow r in table)
+                            _incidLength += r.shape_length;
+                        break;
+                    }
                 case HluGeometryTypes.Point:
                     // For point geometries, there are no area or length measures to calculate, so skip to the end.
                     break;
+
                 default:
-                {
-                    // For polygon geometries, calculate both area and length measures.
-                    HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
-                    GetIncidMMPolygonRows(incidCondList, ref table);
-                    foreach (HluDataSet.incid_mm_polygonsRow r in table)
                     {
-                        _incidArea += r.shape_area;
-                        _incidLength += r.shape_length;
+                        // For polygon geometries, calculate both area and length measures.
+                        HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
+                        GetIncidMMPolygonRows(incidCondList, ref table);
+                        foreach (HluDataSet.incid_mm_polygonsRow r in table)
+                        {
+                            _incidArea += r.shape_area;
+                            _incidLength += r.shape_length;
+                        }
+                        break;
                     }
-                    break;
-                }
             }
 
-            // Convert from native storage units (m� / m) to configured
-            // display units. No rounding here � deferred to display.
+            // Convert from native storage units (mÂ² / m) to configured
+            // display units. No rounding here â€” deferred to display.
             _incidArea = ConvertArea(_incidArea);
             _incidLength = ConvertLength(_incidLength);
         }
@@ -10503,12 +10589,12 @@ namespace HLU.UI.ViewModel
         {
             return Settings.Default.DisplayAreaUnits switch
             {
-                "m�" => squareMetres,
-                "km�" => squareMetres / 1_000_000d,
+                "mÂ²" => squareMetres,
+                "kmÂ²" => squareMetres / 1_000_000d,
                 "ha" => squareMetres / 10_000d,
                 "ac" => squareMetres / 4_046.8564d,
-                "ft�" => squareMetres * 10.76391d,
-                "mi�" => squareMetres / 2_589_988.11d,
+                "ftÂ²" => squareMetres * 10.76391d,
+                "miÂ²" => squareMetres / 2_589_988.11d,
                 _ => squareMetres / 10_000d // fallback: ha
             };
         }
@@ -10539,9 +10625,9 @@ namespace HLU.UI.ViewModel
         private bool PrimaryMatchesLayerType(HluDataSet.lut_primaryRow row) =>
             _gisLayerType switch
             {
-                HluGeometryTypes.Line    => row.line,
-                HluGeometryTypes.Point   => row.point,
-                _                        => row.polygon   // default: Polygon
+                HluGeometryTypes.Line => row.line,
+                HluGeometryTypes.Point => row.point,
+                _ => row.polygon   // default: Polygon
             };
 
         /// <summary>
@@ -10551,9 +10637,9 @@ namespace HLU.UI.ViewModel
         private bool SecondaryMatchesLayerType(HluDataSet.lut_secondaryRow row) =>
             _gisLayerType switch
             {
-                HluGeometryTypes.Line    => row.line,
-                HluGeometryTypes.Point   => row.point,
-                _                        => row.polygon   // default: Polygon
+                HluGeometryTypes.Line => row.line,
+                HluGeometryTypes.Point => row.point,
+                _ => row.polygon   // default: Polygon
             };
 
         #endregion Formatting Helpers

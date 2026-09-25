@@ -27,7 +27,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains the ViewModel for the Query Secondaries window.
     /// </summary>
-    class ViewModelWindowQuerySecondaries : ViewModelBase, IDataErrorInfo
+    internal class ViewModelWindowQuerySecondaries : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -172,7 +172,7 @@ namespace HLU.UI.ViewModel
                 // Validate the string entered
                 string pattern = @"^[1-9][0-9]{0,3}(\s[1-9][0-9]{0,3})*$|^[1-9][0-9]{0,3}((\s)*,(\s)*[1-9][0-9]{0,3})*$|^[1-9][0-9]{0,3}((\s)*\.(\s)*[1-9][0-9]{0,3})*$";
                 if ((!String.IsNullOrEmpty(QuerySecondaries)) && (!Regex.IsMatch(QuerySecondaries, pattern, RegexOptions.IgnoreCase)))
-                    return "Please enter a valid list of secondaries code separated by either spaces, commas or points.";
+                    return "Enter a list of valid secondary codes separated by spaces, commas or points (not mixed).";
                 else
                     return null;
             }
@@ -190,7 +190,7 @@ namespace HLU.UI.ViewModel
                 {
                     case "QuerySecondaries":
                         if ((!String.IsNullOrEmpty(QuerySecondaries)) && (!Regex.IsMatch(QuerySecondaries, pattern, RegexOptions.IgnoreCase)))
-                            error = "Error: You must enter a valid list of secondaries codes separated by either spaces, commas or points.";
+                            error = "Error: Enter a list of valid secondary codes separated by spaces, commas or points (not mixed).";
                         break;
                 }
 

@@ -149,6 +149,17 @@ namespace HLU.GISApplication
 
         #endregion Fields
 
+        #region Properties
+
+        /// <summary>
+        /// Gets or sets the INCID count threshold above which <see cref="SelectIncidsOnMapAsync"/>
+        /// switches from chunked SQL IN-clauses to a temporary-table attribute-join strategy.
+        /// Set this from the application settings after loading or saving options.
+        /// </summary>
+        public int GdbJoinThreshold { get; set; } = 500;
+
+        #endregion Properties
+
         #region SqlBuilder
 
         /// <summary>
@@ -519,7 +530,10 @@ namespace HLU.GISApplication
         {
             if ((targetColumns == null) || (targetColumns.Length == 0))
                 return false;
-            return targetColumns.Any(c => GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal) == null);
+            // Only check columns that exist in the GIS layer structure
+            return targetColumns
+                .Where(c => _hluLayerStructure.Columns.Contains(c.ColumnName))
+                .Any(c => GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal) == null);
         }
 
         /// <summary>
@@ -551,6 +565,10 @@ namespace HLU.GISApplication
                 string columnAlias;
                 foreach (DataColumn c in targetColumns)
                 {
+                    // Skip columns that don't exist in the GIS layer structure (e.g. database-only autonumber fields)
+                    if (!_hluLayerStructure.Columns.Contains(c.ColumnName))
+                        continue;
+
                     fieldName = GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal);
                     if (qualifyColumns)
                     {
@@ -914,6 +932,27 @@ namespace HLU.GISApplication
         /// Selects all INCIDs from a supplied selection table on the active HLU layer and
         /// returns the selected features into the supplied result table schema.
         /// </summary>
+        /// <remarks>
+        /// Two strategies are used depending on the size of the INCID list:
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description>
+        ///       <b>Small list</b> (count &lt;= <see cref="Settings.GdbJoinThreshold"/>): chunked SQL
+        ///       <c>IN (...)</c> WHERE clauses applied directly to the layer.  Fast for small sets because
+        ///       the GDB index is used for each chunk.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <description>
+        ///       <b>Large list</b> (count &gt; <see cref="Settings.GdbJoinThreshold"/>): the incids are
+        ///       written to a temporary table in the working geodatabase, a transient attribute join is
+        ///       added to the layer, and <c>SelectLayerByAttribute</c> selects all rows whose joined incid
+        ///       field is not NULL (i.e. has a match).  The join is then removed and the temp table deleted.
+        ///       This avoids generating hundreds of SQL chunks and performs a single index-assisted join.
+        ///     </description>
+        ///   </item>
+        /// </list>
+        /// </remarks>
         /// <param name="incidSelection">
         /// A DataTable containing the INCID values that should be selected in GIS.
         /// </param>
@@ -926,26 +965,21 @@ namespace HLU.GISApplication
             if (incidSelection == null || incidSelection.Rows.Count == 0)
                 return false;
 
-            // The active HLU layer must already be known (as with SelectCurrentOnMapAsync).
+            // The active HLU layer must already be known.
             if (_hluLayer == null)
                 throw new GisSelectionException("No active HLU layer is set.");
 
             // Determine the ordinal of the INCID column from the layer structure.
-            // This keeps the logic consistent with the rest of the tool.
             int incidOrdinal = _hluLayerStructure.incidColumn.Ordinal;
 
             // Resolve the actual GIS field name for the INCID column.
             string incidFieldName = GetFieldName(incidOrdinal);
 
-            // If we can't resolve the field name, we can't proceed.
             if (String.IsNullOrWhiteSpace(incidFieldName))
                 throw new GisSelectionException(
                     "Could not resolve the incid field name for the active HLU layer.");
 
-            // Extract all distinct INCID values from the selection table, and:
-            //  - convert to string (INCID is stored as text),
-            //  - ignore null/empty values,
-            //  - remove duplicates (important for SQL length and performance).
+            // Extract all distinct INCID values from the selection table.
             var incids = incidSelection.Rows
                 .Cast<DataRow>()
                 .Select(r => r[incidOrdinal]?.ToString())
@@ -953,33 +987,155 @@ namespace HLU.GISApplication
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            // If no valid INCIDs were found, there is nothing to select.
             if (incids.Count == 0)
                 return false;
 
-            // Build one or more WHERE clauses of the form:
-            //   <incidField> IN ('A','B','C',...)
-            //
-            // The clauses are chunked to avoid provider SQL length limits
-            // (FGDB, SDE, shapefile, etc.).
-            IEnumerable<string> whereClauses = BuildInWhereClauses(
-                QuoteIdentifier(incidFieldName),
-                incids,
-                maxClauseLength: 8000);
+            // Use the instance threshold (set from application settings), clamped to
+            // the hard min/max limits defined in the application configuration.
+            int joinThreshold = Math.Clamp(
+                GdbJoinThreshold,
+                Settings.Default.GdbJoinThresholdMin,
+                Settings.Default.GdbJoinThresholdMax);
 
-            // First selection replaces the current map selection,
-            // subsequent clauses are added to it.
-            bool first = true;
-
-            foreach (string whereClause in whereClauses)
+            // Decide which strategy to use.
+            if (incids.Count <= joinThreshold)
             {
-                await SelectByWhereClauseAsync(
-                    whereClause,
-                    first
-                        ? SelectionCombinationMethod.New
-                        : SelectionCombinationMethod.Add).ConfigureAwait(false);
+                // ── Small selection: chunked IN-clause WHERE clauses ─────────────────────────
+                //
+                // Fast for small sets because the geodatabase index can satisfy each chunk
+                // quickly.  The clauses are chunked to stay inside provider SQL length limits
+                // (FGDB, SDE, shapefile, etc.).
+                IEnumerable<string> whereClauses = BuildInWhereClauses(
+                    QuoteIdentifier(incidFieldName),
+                    incids,
+                    maxClauseLength: 8000);
 
-                first = false;
+                bool first = true;
+                foreach (string whereClause in whereClauses)
+                {
+                    await SelectByWhereClauseAsync(
+                        whereClause,
+                        first
+                            ? SelectionCombinationMethod.New
+                            : SelectionCombinationMethod.Add).ConfigureAwait(false);
+                    first = false;
+                }
+            }
+            else
+            {
+                // ── Large selection: temp GDB table + transient attribute join ─────────────────
+                //
+                // Writing hundreds of IN-clause chunks against large datasets creates excessive
+                // round-trips to the geodatabase.  Instead we write all incids into a small
+                // temporary table, add a transient join to the active layer, and run a single
+                // SelectLayerByAttribute that matches every row whose joined incid field is
+                // non-NULL.  The join and temp table are cleaned up afterwards.
+
+                string workingGdbPath = HLUTool.WorkingGdbPath;
+                if (String.IsNullOrWhiteSpace(workingGdbPath))
+                {
+                    // Working GDB is unavailable – fall back to chunked IN-clause strategy.
+                    IEnumerable<string> fallbackClauses = BuildInWhereClauses(
+                        QuoteIdentifier(incidFieldName),
+                        incids,
+                        maxClauseLength: 8000);
+
+                    bool first = true;
+                    foreach (string whereClause in fallbackClauses)
+                    {
+                        await SelectByWhereClauseAsync(
+                            whereClause,
+                            first
+                                ? SelectionCombinationMethod.New
+                                : SelectionCombinationMethod.Add).ConfigureAwait(false);
+                        first = false;
+                    }
+
+                    return true;
+                }
+
+                // Generate a unique name for the temporary selection table.
+                string selTableName = $"SelIncids_{DateTime.Now:yyyyMMddHHmmss}";
+                string selTablePath = System.IO.Path.Combine(workingGdbPath, selTableName);
+
+                // Determine the incid field length from the layer structure so the temp table
+                // column is wide enough to store every value.
+                int incidFieldLength = 0;
+                await QueuedTask.Run(() =>
+                {
+                    using FeatureClassDefinition def = _hluFeatureClass.GetDefinition();
+                    Field fld = def.GetFields()
+                        .FirstOrDefault(f => f.Name.Equals(incidFieldName,
+                            StringComparison.OrdinalIgnoreCase));
+                    if (fld != null)
+                        incidFieldLength = fld.Length;
+                }).ConfigureAwait(false);
+
+                if (incidFieldLength <= 0)
+                    incidFieldLength = 20; // safe default
+
+                // Resolve the full layer path (e.g. "GroupLayer/LayerName") so that the GP
+                // tools work correctly when the active HLU layer is inside a group layer.
+                string hluLayerPath = await GetLayerPathAsync(_hluLayer).ConfigureAwait(false)
+                    ?? _hluLayer.Name;
+
+                bool joinRemoved = false;
+
+                try
+                {
+                    // Step 1: Write all incids to the temporary selection table.
+                    //         WriteIncidSelectionTableAsync creates the table, bulk-inserts all
+                    //         incid values, and adds an attribute index on the incid field so that
+                    //         the join engine can use an index seek on the temp table side.
+                    bool written = await ArcGISProHelpers.WriteIncidSelectionTableAsync(
+                        workingGdbPath, selTableName, incidFieldName,
+                        incidFieldLength, incids).ConfigureAwait(false);
+
+                    if (!written)
+                        throw new GisSelectionException(
+                            "Failed to write the incid selection table to the working geodatabase.");
+
+                    // Step 2: Add a transient attribute join from the active layer to the temp table.
+                    bool joined = await ArcGISProHelpers.AddJoinAsync(
+                        hluLayerPath,
+                        incidFieldName,
+                        selTablePath,
+                        incidFieldName).ConfigureAwait(false);
+
+                    if (!joined)
+                        throw new GisSelectionException(
+                            "Failed to add the attribute join to the active HLU layer.");
+
+                    joinRemoved = false;
+
+                    // Step 3: Select all features whose joined incid field is not NULL.
+                    //         After an AddJoin the joined field is qualified with the table name,
+                    //         e.g. SelIncids_20250601120000.incid.
+                    string joinedField = $"{selTableName}.{incidFieldName}";
+                    string selectWhereClause = $"{QuoteIdentifier(joinedField)} IS NOT NULL";
+
+                    bool selected = await ArcGISProHelpers.SelectLayerByAttributeAsync(
+                        hluLayerPath,
+                        "NEW_SELECTION",
+                        selectWhereClause).ConfigureAwait(false);
+
+                    if (!selected)
+                        throw new GisSelectionException(
+                            "Failed to select features via the attribute join.");
+                }
+                finally
+                {
+                    // Step 4: Always remove the join (even on failure) to leave the layer clean.
+                    if (!joinRemoved)
+                    {
+                        await ArcGISProHelpers.RemoveJoinAsync(
+                            hluLayerPath, selTableName).ConfigureAwait(false);
+                    }
+
+                    // Step 5: Delete the temporary selection table.
+                    await ArcGISProHelpers.DeleteGeodatabaseTableAsync(
+                        workingGdbPath, selTableName).ConfigureAwait(false);
+                }
             }
 
             return true;
@@ -1120,6 +1276,40 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// Returns the selected and total feature counts for the named feature layer.
+        /// </summary>
+        /// <param name="layerName">The exact name of the layer as it appears in the active map.</param>
+        /// <returns>
+        /// A task that returns a tuple containing:
+        /// <list type="bullet">
+        /// <item><term>Selected</term><description>The number of currently selected features.</description></item>
+        /// <item><term>Total</term><description>The total number of features in the layer.</description></item>
+        /// </list>
+        /// Returns <c>(0, 0)</c> when the named layer cannot be found.
+        /// </returns>
+        public async Task<(int Selected, long Total)> CountLayerFeaturesAsync(string layerName)
+        {
+            return await QueuedTask.Run(() =>
+            {
+                // Locate the named layer in the active map.
+                FeatureLayer fl = MapView.Active?.Map
+                    ?.GetLayersAsFlattenedList()
+                    .OfType<FeatureLayer>()
+                    .FirstOrDefault(l => string.Equals(l.Name, layerName, StringComparison.OrdinalIgnoreCase));
+
+                if (fl == null)
+                    return (0, 0L);
+
+                int selected = fl.SelectionCount;
+
+                using Table table = fl.GetTable();
+                long total = table.GetCount();
+
+                return (selected, total);
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Checks whether the selected rows are unique by (incid,toid,fragid) in the active HLU layer.
         /// </summary>
         /// <remarks>
@@ -1174,6 +1364,32 @@ namespace HLU.GISApplication
                 }
 
                 return true;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Counts the features in the active HLU layer that match the supplied SQL WHERE clause,
+        /// without modifying the map selection.
+        /// </summary>
+        /// <param name="whereClause">
+        /// The SQL WHERE clause to apply. Pass <see langword="null"/> or an empty string to count
+        /// all features.
+        /// </param>
+        /// <returns>
+        /// A task whose result is the number of matching features, or -1 if no active layer is set.
+        /// </returns>
+        public async Task<int> CountFeaturesMatchingWhereClauseAsync(string whereClause)
+        {
+            if (_hluFeatureClass == null)
+                return -1;
+
+            return await QueuedTask.Run(() =>
+            {
+                QueryFilter qf = new()
+                {
+                    WhereClause = whereClause ?? string.Empty
+                };
+                return (int)_hluFeatureClass.GetCount(qf);
             }).ConfigureAwait(false);
         }
 
@@ -1232,44 +1448,88 @@ namespace HLU.GISApplication
             if (incids.Count == 0)
                 return (0, 0, 0);
 
+            // The distinct INCID count is already known from the in-memory list.
+            int incidCount = incids.Count;
+
             // Build chunked WHERE clauses for querying the layer.
-            IEnumerable<string> whereClauses = BuildInWhereClauses(
+            // Materialise to a list so we can inspect the count before entering QueuedTask.
+            List<string> whereClauses = [.. BuildInWhereClauses(
                 QuoteIdentifier(incidFieldName),
                 incids,
-                maxClauseLength: 8000);
+                maxClauseLength: 8000)];
 
             // Run the counting logic on the MCT.
             return await QueuedTask.Run(() =>
             {
                 int fragmentCount = 0;
 
-                // Create HashSets to track distinct INCIDs and TOIDs explicitly, since the layer may return duplicates.
-                var distinctIncids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                // Track distinct TOIDs across all chunks.
                 var distinctToids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                // Query the layer for each chunked WHERE clause.
-                foreach (string whereClause in whereClauses)
+                // Strategy selection:
+                //
+                // Chunked IN-clause queries are efficient for small selections because the
+                // database index can satisfy each chunk quickly.  However, with a large
+                // INCID count (e.g. 158,000) this produces hundreds of separate round-trips,
+                // which dominates cost especially on enterprise geodatabases.
+                //
+                // When the number of chunks exceeds the threshold, a single sequential scan
+                // of the entire layer filtered in memory is faster: one trip instead of N,
+                // and purely sequential I/O rather than N separate index seeks.
+                //
+                // Using _hluLayer (not _hluFeatureClass) throughout ensures any definition
+                // query applied to the layer is respected.
+                const int fullScanThreshold = 20;
+
+                if (whereClauses.Count <= fullScanThreshold)
                 {
+                    // Small selection – use indexed IN-clause queries and count in the cursor
+                    // (avoids a second GetCount() round-trip per chunk while staying
+                    // consistent with any definition query on _hluLayer).
+                    foreach (string whereClause in whereClauses)
+                    {
+                        QueryFilter qf = new()
+                        {
+                            WhereClause = whereClause,
+                            SubFields = QuoteIdentifier(toidFieldName)
+                        };
+
+                        using RowCursor cursor = _hluLayer.Search(qf);
+                        while (cursor.MoveNext())
+                        {
+                            using Row row = cursor.Current;
+
+                            fragmentCount++;
+
+                            string toid = Convert.ToString(row[toidFieldName]);
+                            if (!String.IsNullOrWhiteSpace(toid))
+                                distinctToids.Add(toid);
+                        }
+                    }
+                }
+                else
+                {
+                    // Large selection – single sequential scan with in-memory INCID filter.
+                    // Build a HashSet for O(1) membership tests.
+                    var incidSet = new HashSet<string>(incids, StringComparer.OrdinalIgnoreCase);
+
                     QueryFilter qf = new()
                     {
-                        WhereClause = whereClause,
+                        // No WhereClause – read the whole layer in one pass.
                         SubFields =
                             $"{QuoteIdentifier(incidFieldName)},{QuoteIdentifier(toidFieldName)}"
                     };
 
-                    // Loop through the returned rows.
                     using RowCursor cursor = _hluLayer.Search(qf);
                     while (cursor.MoveNext())
                     {
                         using Row row = cursor.Current;
 
-                        // Increment the fragment count for every returned row.
-                        fragmentCount++;
-
-                        // Collect unique INCIDs and TOIDs.
                         string incid = Convert.ToString(row[incidFieldName]);
-                        if (!String.IsNullOrWhiteSpace(incid))
-                            distinctIncids.Add(incid);
+                        if (String.IsNullOrWhiteSpace(incid) || !incidSet.Contains(incid))
+                            continue;
+
+                        fragmentCount++;
 
                         string toid = Convert.ToString(row[toidFieldName]);
                         if (!String.IsNullOrWhiteSpace(toid))
@@ -1278,7 +1538,7 @@ namespace HLU.GISApplication
                 }
 
                 // Return the counts.
-                return (distinctIncids.Count, distinctToids.Count, fragmentCount);
+                return (incidCount, distinctToids.Count, fragmentCount);
             }).ConfigureAwait(false);
         }
 
@@ -2059,6 +2319,275 @@ namespace HLU.GISApplication
         #region Merge
 
         /// <summary>
+        /// Deletes all currently selected features from the HLU layer, capturing a history row for
+        /// each before deletion.
+        /// </summary>
+        /// <remarks>
+        /// The edits are queued onto <paramref name="editOperation"/> but not executed; the caller
+        /// is responsible for calling <see cref="EditOperation.ExecuteAsync"/> and saving edits.
+        /// </remarks>
+        /// <param name="historyColumns">The history columns to capture for each deleted feature.</param>
+        /// <param name="editOperation">The edit operation to queue deletes onto.</param>
+        /// <returns>
+        /// A history <see cref="DataTable"/> with one row per deleted feature, or <c>null</c>
+        /// if no features are selected.
+        /// </returns>
+        public async Task<DataTable> DeleteSelectedFeaturesAsync(
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
+        {
+            ArgumentNullException.ThrowIfNull(historyColumns);
+            ArgumentNullException.ThrowIfNull(editOperation);
+
+            if (_hluLayer == null)
+                throw new HLUToolException("HLU layer is not set.");
+            if (_hluFeatureClass == null)
+                throw new HLUToolException("HLU feature class is not set.");
+            if (_hluLayerStructure == null)
+                throw new HLUToolException("HLU layer structure is not set.");
+
+            List<HistoryFieldBindingHelper.HistoryFieldBinding> historyBindings =
+                HistoryFieldBindingHelper.BuildHistoryFieldBindings(
+                    historyColumns,
+                    HistoryAdditionalFieldsDelimiter,
+                    MapField,
+                    FuzzyFieldOrdinal);
+
+            DataTable historyTable = CreateHistoryDataTable(historyBindings);
+
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    Selection selection = _hluLayer.GetSelection();
+                    IReadOnlyList<long> selectedObjectIds = selection?.GetObjectIDs() ?? [];
+
+                    if (selectedObjectIds.Count == 0)
+                        return;
+
+                    if (_hluFeatureClass is not Table hluTable)
+                        throw new HLUToolException("HLU feature class is not a valid table.");
+
+                    // Capture history for every feature before queuing the delete.
+                    List<long> toDelete = [.. selectedObjectIds];
+
+                    foreach (long oid in toDelete)
+                    {
+                        ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                        {
+                            DataRow historyRow = historyTable.NewRow();
+
+                            foreach (HistoryFieldBindingHelper.HistoryFieldBinding b in historyBindings)
+                                historyRow[b.OutputColumnName] = row[b.SourceFieldIndex] ?? DBNull.Value;
+
+                            if (row is Feature feature)
+                            {
+                                Geometry geom = feature.GetShape();
+                                (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
+                            }
+                            else
+                            {
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = DBNull.Value;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = DBNull.Value;
+                            }
+
+                            historyTable.Rows.Add(historyRow);
+                        });
+                    }
+
+                    // Queue the deletes.
+                    editOperation.Callback(context =>
+                    {
+                        foreach (long oid in toDelete)
+                        {
+                            ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                            {
+                                row.Delete();
+                                context.Invalidate(row);
+                            });
+                        }
+                    }, hluTable);
+                }
+                catch (Exception ex)
+                {
+                    throw new HLUToolException("Error deleting selected GIS features: " + ex.Message, ex);
+                }
+            });
+
+            return historyTable;
+        }
+
+        /// <summary>
+        /// Deletes all features that are currently selected in the specified <paramref name="featureLayer"/>,
+        /// capturing a history row for each before deletion.
+        /// </summary>
+        /// <remarks>
+        /// This overload accepts an explicit layer and feature class so that callers can target a layer
+        /// other than the active <c>_hluLayer</c> (for example, during a multi-layer Bulk unload).
+        /// The edits are queued onto <paramref name="editOperation"/> but not executed; the caller
+        /// is responsible for calling <see cref="EditOperation.ExecuteAsync"/> and saving edits.
+        /// </remarks>
+        /// <param name="featureLayer">The HLU feature layer whose selected features should be deleted.</param>
+        /// <param name="featureClass">The feature class backing <paramref name="featureLayer"/>.</param>
+        /// <param name="historyColumns">The history columns to capture for each deleted feature.</param>
+        /// <param name="editOperation">The edit operation to queue deletes onto.</param>
+        /// <returns>
+        /// A history <see cref="DataTable"/> with one row per deleted feature, or an empty table
+        /// if no features are selected in the layer.
+        /// </returns>
+        public async Task<DataTable> DeleteSelectedFeaturesForLayerAsync(
+            FeatureLayer featureLayer,
+            FeatureClass featureClass,
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
+        {
+            ArgumentNullException.ThrowIfNull(featureLayer);
+            ArgumentNullException.ThrowIfNull(featureClass);
+            ArgumentNullException.ThrowIfNull(historyColumns);
+            ArgumentNullException.ThrowIfNull(editOperation);
+
+            if (_hluLayerStructure == null)
+                throw new HLUToolException("HLU layer structure is not set.");
+
+            List<HistoryFieldBindingHelper.HistoryFieldBinding> historyBindings =
+                HistoryFieldBindingHelper.BuildHistoryFieldBindings(
+                    historyColumns,
+                    HistoryAdditionalFieldsDelimiter,
+                    MapField,
+                    FuzzyFieldOrdinal);
+
+            DataTable historyTable = CreateHistoryDataTable(historyBindings);
+
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    Selection selection = featureLayer.GetSelection();
+                    IReadOnlyList<long> selectedObjectIds = selection?.GetObjectIDs() ?? [];
+
+                    if (selectedObjectIds.Count == 0)
+                        return;
+
+                    if (featureClass is not Table hluTable)
+                        throw new HLUToolException("HLU feature class is not a valid table.");
+
+                    List<long> toDelete = [.. selectedObjectIds];
+
+                    foreach (long oid in toDelete)
+                    {
+                        ArcGISProHelpers.WithRowByObjectId(featureClass, oid, row =>
+                        {
+                            DataRow historyRow = historyTable.NewRow();
+
+                            foreach (HistoryFieldBindingHelper.HistoryFieldBinding b in historyBindings)
+                                historyRow[b.OutputColumnName] = row[b.SourceFieldIndex] ?? DBNull.Value;
+
+                            if (row is Feature feature)
+                            {
+                                Geometry geom = feature.GetShape();
+                                (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
+                            }
+                            else
+                            {
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = DBNull.Value;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = DBNull.Value;
+                            }
+
+                            historyTable.Rows.Add(historyRow);
+                        });
+                    }
+
+                    editOperation.Callback(context =>
+                    {
+                        foreach (long oid in toDelete)
+                        {
+                            ArcGISProHelpers.WithRowByObjectId(featureClass, oid, row =>
+                            {
+                                row.Delete();
+                                context.Invalidate(row);
+                            });
+                        }
+                    }, hluTable);
+                }
+                catch (Exception ex)
+                {
+                    throw new HLUToolException("Error deleting selected GIS features: " + ex.Message, ex);
+                }
+            });
+
+            return historyTable;
+        }
+
+        /// <summary>
+        /// Reads the current selection from the specified <paramref name="featureLayer"/> into
+        /// <paramref name="resultTable"/>, without changing the active HLU layer.
+        /// </summary>
+        /// <param name="featureLayer">The feature layer to read the selection from.</param>
+        /// <param name="resultTable">A DataTable defining the schema of the rows to be returned.</param>
+        /// <returns>The populated <paramref name="resultTable"/>.</returns>
+        public async Task<DataTable> ReadMapSelectionForLayerAsync(
+            FeatureLayer featureLayer,
+            DataTable resultTable)
+        {
+            if (resultTable == null)
+                return resultTable;
+
+            if (featureLayer == null)
+                throw new GisSelectionException("No feature layer supplied.");
+
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    var selection = featureLayer.GetSelection();
+
+                    if (selection.GetCount() == 0)
+                        return;
+
+                    var table = featureLayer.GetTable();
+                    var def = table.GetDefinition();
+
+                    var missing = resultTable.Columns
+                        .Cast<DataColumn>()
+                        .Select(c => c.ColumnName)
+                        .Where(colName => def.FindField(colName) < 0)
+                        .ToList();
+
+                    if (missing.Count > 0)
+                        throw new MissingLayerFieldsException(missing);
+
+                    using RowCursor rowCursor = selection.Search();
+
+                    while (rowCursor.MoveNext())
+                    {
+                        using Feature feature = (Feature)rowCursor.Current;
+
+                        DataRow dataRow = resultTable.NewRow();
+
+                        foreach (DataColumn c in resultTable.Columns)
+                            dataRow[c.ColumnName] = feature[c.ColumnName] ?? DBNull.Value;
+
+                        resultTable.Rows.Add(dataRow);
+                    }
+                }
+                catch (HLUToolException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    throw new HLUToolException("Error reading map selection: " + ex.Message, ex);
+                }
+            });
+
+            return resultTable;
+        }
+
+        /// <summary>
         /// Physically merges the currently selected features by unioning their geometries into a single result feature,
         /// deleting the other selected features, and setting the result feature's fragid to
         /// <paramref name="newFragmentID"/>.
@@ -2735,13 +3264,48 @@ namespace HLU.GISApplication
             DataColumn[] historyColumns,
             EditOperation editOperation)
         {
+            return await RegisterNewFeaturesAsync(
+                _hluLayer,
+                _hluFeatureClass,
+                oidAssignments,
+                historyColumns,
+                editOperation);
+        }
+
+        /// <summary>
+        /// Writes the assigned INCID, fragment ID, and validated habitat attribute values
+        /// to a set of newly created GIS features (identified by object ID) in the specified layer,
+        /// captures geometry metadata for history, and queues the GIS field updates into the provided
+        /// edit operation.
+        /// </summary>
+        /// <param name="targetLayer">The feature layer to update.</param>
+        /// <param name="targetFeatureClass">The feature class backing the target layer.</param>
+        /// <param name="oidAssignments">
+        /// A mapping of each feature's object ID to the INCID, fragment ID, and validated
+        /// habitat attribute values it should receive.  Every entry must map to a non-null,
+        /// non-empty INCID and fragment ID; the habitat values may be null (which clears the
+        /// corresponding GIS field).
+        /// </param>
+        /// <param name="historyColumns">History schema columns used to build the returned table.</param>
+        /// <param name="editOperation">The edit operation into which the GIS field writes are queued.</param>
+        /// <returns>
+        /// A <see cref="DataTable"/> with one row per registered feature.  Each row contains
+        /// the values written to the feature (incid, fragid, geometry dimensions) laid out
+        /// according to <paramref name="historyColumns"/>, plus an extra <c>"oid"</c> column
+        /// carrying the feature's object ID.
+        /// </returns>
+        public async Task<DataTable> RegisterNewFeaturesAsync(
+            FeatureLayer targetLayer,
+            FeatureClass targetFeatureClass,
+            Dictionary<long, (string incid, string fragid, string habprimary, string habsecond, string determqty, string interpqty)> oidAssignments,
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
+        {
+            ArgumentNullException.ThrowIfNull(targetLayer);
+            ArgumentNullException.ThrowIfNull(targetFeatureClass);
             ArgumentNullException.ThrowIfNull(oidAssignments);
             ArgumentNullException.ThrowIfNull(editOperation);
 
-            if (_hluLayer == null)
-                throw new HLUToolException("HLU layer is not set.");
-            if (_hluFeatureClass == null)
-                throw new HLUToolException("HLU feature class is not set.");
             if (_hluLayerStructure == null)
                 throw new HLUToolException("HLU layer structure is not set.");
 
@@ -2808,7 +3372,10 @@ namespace HLU.GISApplication
                 Table hluTable = _hluFeatureClass as Table;
 
                 // Pass 1 — read geometry for history rows.
-                QueryFilter qf = new() { ObjectIDs = oids };
+                QueryFilter qf = new()
+                {
+                    ObjectIDs = oids
+                };
                 using (RowCursor cursor = _hluFeatureClass.Search(qf, false))
                 {
                     while (cursor.MoveNext())
@@ -2880,7 +3447,7 @@ namespace HLU.GISApplication
                         if (!oidAssignments.TryGetValue(oid, out var assignment))
                             continue;
 
-                        row[incidFieldIndex]  = assignment.incid;
+                        row[incidFieldIndex] = assignment.incid;
                         row[fragidFieldIndex] = assignment.fragid;
 
                         // Overwrite each habitat field with the validated value (null clears an
@@ -2888,11 +3455,11 @@ namespace HLU.GISApplication
                         if (habprimaryFieldIndex != -1)
                             row[habprimaryFieldIndex] = (object)assignment.habprimary ?? DBNull.Value;
                         if (habsecondFieldIndex != -1)
-                            row[habsecondFieldIndex]  = (object)assignment.habsecond  ?? DBNull.Value;
+                            row[habsecondFieldIndex] = (object)assignment.habsecond ?? DBNull.Value;
                         if (determqtyFieldIndex != -1)
-                            row[determqtyFieldIndex]  = (object)assignment.determqty  ?? DBNull.Value;
+                            row[determqtyFieldIndex] = (object)assignment.determqty ?? DBNull.Value;
                         if (interpqtyFieldIndex != -1)
-                            row[interpqtyFieldIndex]  = (object)assignment.interpqty  ?? DBNull.Value;
+                            row[interpqtyFieldIndex] = (object)assignment.interpqty ?? DBNull.Value;
 
                         row.Store();
                         context.Invalidate(row);
@@ -2924,17 +3491,20 @@ namespace HLU.GISApplication
             {
                 // Read the four fields using the fuzzy mapping logic to get their indexes.
                 int habprimaryIdx = FuzzyFieldOrdinal("habprimary");
-                int habsecondIdx  = FuzzyFieldOrdinal("habsecond");
-                int determqtyIdx  = FuzzyFieldOrdinal("determqty");
-                int interpqtyIdx  = FuzzyFieldOrdinal("interpqty");
+                int habsecondIdx = FuzzyFieldOrdinal("habsecond");
+                int determqtyIdx = FuzzyFieldOrdinal("determqty");
+                int interpqtyIdx = FuzzyFieldOrdinal("interpqty");
 
                 // If none of the four fields exist in the layer there is nothing to propagate.
                 if (habprimaryIdx == -1 && habsecondIdx == -1 &&
-                    determqtyIdx  == -1 && interpqtyIdx  == -1)
+                    determqtyIdx == -1 && interpqtyIdx == -1)
                     return;
 
                 // Build a query filter to read the features by OID.
-                QueryFilter qf = new() { ObjectIDs = oids };
+                QueryFilter qf = new()
+                {
+                    ObjectIDs = oids
+                };
 
                 // Use a RowCursor to read the features and extract the four fields, applying the
                 // fuzzy mapping logic and trimming/normalizing string values. Store results in the
@@ -2954,9 +3524,11 @@ namespace HLU.GISApplication
                     // trimming and normalization logic.
                     string GetVal(int idx)
                     {
-                        if (idx < 0) return null;
+                        if (idx < 0)
+                            return null;
                         object v = feature[idx];
-                        if (v == null || v is DBNull) return null;
+                        if (v == null || v is DBNull)
+                            return null;
                         string s = v.ToString().Trim();
                         return string.IsNullOrEmpty(s) ? null : s;
                     }
@@ -2967,6 +3539,169 @@ namespace HLU.GISApplication
                         GetVal(habsecondIdx),
                         GetVal(determqtyIdx),
                         GetVal(interpqtyIdx));
+                }
+            });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Reads the five OSMM cross-reference attribute values from the specified feature layer
+        /// for every OID in <paramref name="oids"/>, using the caller-supplied field name mappings.
+        /// Fields that are absent from the layer, or whose value is null/empty, yield
+        /// <see langword="null"/> for the affected OID.
+        /// </summary>
+        /// <param name="layerName">Name of the non-HLU source layer to read from.</param>
+        /// <param name="oids">The object IDs of the features to read.</param>
+        /// <param name="makeField">Source field mapped to <c>lut_osmm_habitat_xref.make</c>.</param>
+        /// <param name="descGroupField">Source field mapped to <c>lut_osmm_habitat_xref.desc_group</c>.</param>
+        /// <param name="descTermField">Source field mapped to <c>lut_osmm_habitat_xref.desc_term</c>.</param>
+        /// <param name="themeField">Source field mapped to <c>lut_osmm_habitat_xref.theme</c>.</param>
+        /// <param name="featCodeField">Source field mapped to <c>lut_osmm_habitat_xref.feat_code</c>.</param>
+        /// <returns>
+        /// A dictionary mapping each OID to a tuple of
+        /// (make, descGroup, descTerm, theme, featCode).
+        /// </returns>
+        public async Task<Dictionary<long, (string make, string descGroup, string descTerm, string theme, string featCode)>>
+            ReadOsmmAttributesAsync(
+                string layerName,
+                IReadOnlyList<long> oids,
+                string makeField,
+                string descGroupField,
+                string descTermField,
+                string themeField,
+                string featCodeField)
+        {
+            var result = new Dictionary<long, (string make, string descGroup, string descTerm, string theme, string featCode)>();
+
+            if (string.IsNullOrEmpty(layerName) || oids == null || oids.Count == 0)
+                return result;
+
+            // Find the source feature layer by name.
+            FeatureLayer sourceLayer = await FindLayerAsync(layerName);
+            if (sourceLayer == null)
+                return result;
+
+            await QueuedTask.Run(() =>
+            {
+                using Table table = sourceLayer.GetTable();
+                if (table == null)
+                    return;
+
+                // Resolve field indexes once — -1 means the field is absent.
+                using TableDefinition def = table.GetDefinition();
+                IReadOnlyList<Field> fields = def.GetFields();
+
+                int IdxOf(string fieldName)
+                {
+                    if (string.IsNullOrEmpty(fieldName))
+                        return -1;
+                    for (int i = 0; i < fields.Count; i++)
+                        if (string.Equals(fields[i].Name, fieldName, StringComparison.OrdinalIgnoreCase))
+                            return i;
+                    return -1;
+                }
+
+                int makeIdx = IdxOf(makeField);
+                int descGroupIdx = IdxOf(descGroupField);
+                int descTermIdx = IdxOf(descTermField);
+                int themeIdx = IdxOf(themeField);
+                int featCodeIdx = IdxOf(featCodeField);
+
+                // Helper to safely extract a trimmed string value from a row.
+                string GetVal(Row row, int idx)
+                {
+                    if (idx < 0)
+                        return null;
+                    object v = row[idx];
+                    if (v == null || v is DBNull)
+                        return null;
+                    string s = v.ToString().Trim();
+                    return string.IsNullOrEmpty(s) ? null : s;
+                }
+
+                QueryFilter qf = new()
+                {
+                    ObjectIDs = oids
+                };
+                using RowCursor cursor = table.Search(qf, false);
+                while (cursor.MoveNext())
+                {
+                    using Row row = cursor.Current;
+                    if (row == null)
+                        continue;
+
+                    long oid = row.GetObjectID();
+                    result[oid] = (
+                        GetVal(row, makeIdx),
+                        GetVal(row, descGroupIdx),
+                        GetVal(row, descTermIdx),
+                        GetVal(row, themeIdx),
+                        GetVal(row, featCodeIdx));
+                }
+            });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Reads the values of a single named field from the specified feature layer for the given OIDs.
+        /// Returns a dictionary mapping each OID to the trimmed string value of the field, or
+        /// <see langword="null"/> when the field is absent from the layer or the value is null/empty.
+        /// </summary>
+        /// <param name="layerName">Name of the feature layer to read from.</param>
+        /// <param name="oids">The object IDs of the features to read.</param>
+        /// <param name="fieldName">The name of the field to read.</param>
+        public async Task<Dictionary<long, string>> ReadSourceFieldValuesAsync(
+            string layerName, IReadOnlyList<long> oids, string fieldName)
+        {
+            var result = new Dictionary<long, string>();
+
+            if (string.IsNullOrEmpty(layerName) || string.IsNullOrEmpty(fieldName) ||
+                oids == null || oids.Count == 0)
+                return result;
+
+            FeatureLayer sourceLayer = await FindLayerAsync(layerName);
+            if (sourceLayer == null)
+                return result;
+
+            await QueuedTask.Run(() =>
+            {
+                using Table table = sourceLayer.GetTable();
+                if (table == null)
+                    return;
+
+                using TableDefinition def = table.GetDefinition();
+                IReadOnlyList<Field> fields = def.GetFields();
+
+                int fieldIdx = -1;
+                for (int i = 0; i < fields.Count; i++)
+                {
+                    if (string.Equals(fields[i].Name, fieldName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        fieldIdx = i;
+                        break;
+                    }
+                }
+
+                if (fieldIdx < 0)
+                    return;
+
+                QueryFilter qf = new()
+                {
+                    ObjectIDs = oids
+                };
+                using RowCursor cursor = table.Search(qf, false);
+                while (cursor.MoveNext())
+                {
+                    using Row row = cursor.Current;
+                    if (row == null)
+                        continue;
+
+                    long oid = row.GetObjectID();
+                    object v = row[fieldIdx];
+                    string s = (v == null || v is DBNull) ? null : v.ToString().Trim();
+                    result[oid] = string.IsNullOrEmpty(s) ? null : s;
                 }
             });
 
@@ -3266,6 +4001,100 @@ namespace HLU.GISApplication
                 var (gdbPath, featureClassName) = PromptForGdbExport(
                     initialGdbPath,
                     initialFeatureName,
+                    String.IsNullOrWhiteSpace(initialGdbPath) ? dialogInitialDir : String.Empty);
+
+                if (String.IsNullOrWhiteSpace(gdbPath) ||
+                    String.IsNullOrWhiteSpace(featureClassName))
+                    return;
+
+                outputWorkspace = gdbPath;
+                outputFeatureClassName = featureClassName;
+            });
+
+            return (outputWorkspace, outputFeatureClassName);
+        }
+
+        /// <summary>
+        /// Prompts the user for the bulk load staging layer location and feature class name.
+        /// The output format is already known from the Bulk Load window, so the
+        /// appropriate dialog is shown directly without a format-chooser step.
+        /// For the GDB branch a single combined dialog collects both the
+        /// target geodatabase path and the feature class name.
+        /// </summary>
+        /// <param name="initialDirectory">
+        /// The initial directory for the dialogs.
+        /// Falls back to the project home folder, then My Documents.
+        /// </param>
+        /// <param name="isGdb">
+        /// True to show the File Geodatabase combined dialog;
+        /// false to show the Shapefile Save dialog.
+        /// </param>
+        /// <returns>
+        /// A tuple of (outputWorkspace, outputFeatureClassName),
+        /// both null if the user cancels.
+        /// </returns>
+        public async Task<(string outputWorkspace, string outputFeatureClassName)>
+            BulkLoadPromptAsync(string initialDirectory, bool isGdb = false)
+        {
+            string outputWorkspace = null;
+            string outputFeatureClassName = null;
+
+            await FrameworkApplication.Current.Dispatcher.InvokeAsync(() =>
+            {
+                // Resolve the initial directory with fallback logic.
+                string dialogInitialDir = initialDirectory;
+
+                if (String.IsNullOrWhiteSpace(dialogInitialDir))
+                    dialogInitialDir = Project.Current?.HomeFolderPath;
+
+                if (String.IsNullOrWhiteSpace(dialogInitialDir))
+                    dialogInitialDir = Environment.GetFolderPath(
+                        Environment.SpecialFolder.MyDocuments);
+
+                if (!isGdb)
+                {
+                    // ── Shapefile branch ──────────────────────────────────
+                    SaveFileDialog shpDialog = new()
+                    {
+                        Title = "Staging Layer – Shapefile",
+                        Filter = "Shapefile (*.shp)|*.shp",
+                        DefaultExt = "shp",
+                        FileName = "HLU_Staging",
+                        InitialDirectory = dialogInitialDir
+                    };
+
+                    if (shpDialog.ShowDialog() != true)
+                        return;
+
+                    string shpPath = shpDialog.FileName;
+
+                    if (!shpPath.EndsWith(".shp", StringComparison.OrdinalIgnoreCase))
+                        shpPath += ".shp";
+
+                    outputWorkspace = System.IO.Path.GetDirectoryName(shpPath);
+                    outputFeatureClassName = System.IO.Path.GetFileName(shpPath);
+                    return;
+                }
+
+                // ── GDB branch ────────────────────────────────────────────
+                // A single combined dialog collects both the .gdb workspace
+                // path (via an inline Browse button) and the feature class name.
+                // This avoids the confusing two-dialog sequence.
+
+                // If the initial directory is itself a .gdb, pre-populate it.
+                string initialGdbPath =
+                    dialogInitialDir.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase) &&
+                    System.IO.Directory.Exists(dialogInitialDir)
+                        ? dialogInitialDir
+                        : String.Empty;
+
+                string initialFeatureName = String.IsNullOrWhiteSpace(initialGdbPath)
+                    ? "HLU_Staging"
+                    : System.IO.Path.GetFileNameWithoutExtension(initialGdbPath);
+
+                var (gdbPath, featureClassName) = PromptForGdbBulkLoad(
+                    initialGdbPath,
+                    initialFeatureName,
                     dialogInitialDir);
 
                 if (String.IsNullOrWhiteSpace(gdbPath) ||
@@ -3303,6 +4132,44 @@ namespace HLU.GISApplication
                 string browserInitialDir)
         {
             var dialog = new HLU.UI.View.WindowGdbExport(
+                initialGdbPath,
+                initialFeatureName,
+                browserInitialDir)
+            {
+                Owner = FrameworkApplication.Current.MainWindow
+            };
+
+            bool? result = dialog.ShowDialog();
+
+            return result == true
+                ? (dialog.GdbPath, dialog.FeatureClassName)
+                : (String.Empty, String.Empty);
+        }
+
+        /// <summary>
+        /// Shows a single combined dialog that lets the user choose a File
+        /// Geodatabase workspace and enter a feature class name for bulk load staging.
+        /// </summary>
+        /// <param name="initialGdbPath">
+        /// Pre-populated .gdb folder path, or empty string for none.
+        /// </param>
+        /// <param name="initialFeatureName">
+        /// Pre-populated feature class name suggestion.
+        /// </param>
+        /// <param name="browserInitialDir">
+        /// The directory the folder browser opens in when Browse is clicked.
+        /// Unused — the window derives the start directory from the GDB path.
+        /// </param>
+        /// <returns>
+        /// A tuple of (gdbPath, featureClassName); both empty if cancelled.
+        /// </returns>
+        private static (string gdbPath, string featureClassName)
+            PromptForGdbBulkLoad(
+                string initialGdbPath,
+                string initialFeatureName,
+                string browserInitialDir)
+        {
+            var dialog = new HLU.UI.View.WindowGdbBulkLoad(
                 initialGdbPath,
                 initialFeatureName)
             {
@@ -3402,7 +4269,7 @@ namespace HLU.GISApplication
 
                 // Save any edits started by the geoprocessing tool to release
                 // the geodatabase schema lock before the next operation.
-                await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                await Project.Current.SaveEditsAsync();
 
                 // STEP 2: Delete unwanted GIS fields from temp FC
 
@@ -3475,7 +4342,7 @@ namespace HLU.GISApplication
 
                 // Save any edits started by the geoprocessing tool to release
                 // the geodatabase schema lock before the next operation.
-                await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                await Project.Current.SaveEditsAsync();
 
                 // STEP 3: Delete duplicate join key field if it was added by the join
                 await ArcGISProHelpers.DeleteDuplicateJoinFieldAsync(tempFcPath, joinKeyField);
@@ -3672,6 +4539,158 @@ namespace HLU.GISApplication
 
         #endregion Export
 
+        #region Reassign
+
+        /// <summary>
+        /// Copies all features from the active HLU layer that match <paramref name="whereClause"/>
+        /// into <paramref name="targetLayerName"/>, then deletes them from the source layer.
+        /// All edits are queued onto a single <see cref="EditOperation"/>; the caller is
+        /// responsible for executing and saving it.
+        /// </summary>
+        /// <param name="targetLayerName">The name of the destination HLU layer.</param>
+        /// <param name="whereClause">SQL WHERE clause used to select features to move.</param>
+        /// <param name="editOperation">The edit operation to queue edits onto.</param>
+        /// <returns>
+        /// A task whose result is the number of features moved, or -1 if the target layer
+        /// could not be found or the source layer is not set.
+        /// </returns>
+        public async Task<int> ReassignFeaturesAsync(
+            string targetLayerName,
+            string whereClause,
+            EditOperation editOperation)
+        {
+            ArgumentNullException.ThrowIfNull(editOperation);
+
+            if (_hluLayer == null || _hluFeatureClass == null)
+                return -1;
+
+            if (string.IsNullOrWhiteSpace(targetLayerName))
+                return -1;
+
+            // Locate the target feature layer in the active map.
+            FeatureLayer targetLayer = await FindLayerAsync(targetLayerName);
+            if (targetLayer == null)
+                return -1;
+
+            // The return value must be known before ExecuteAsync() runs the callback,
+            // so count matching features now with a cheap server-side COUNT query.
+            // This also lets us short-circuit immediately when nothing matches.
+            QueryFilter qf = new()
+            {
+                WhereClause = whereClause ?? string.Empty
+            };
+
+            int matchingCount = await QueuedTask.Run(() =>
+                (int)_hluFeatureClass.GetCount(qf)).ConfigureAwait(false);
+
+            if (matchingCount == 0)
+                return 0;
+
+            await QueuedTask.Run(() =>
+            {
+                // Get the target feature class.
+                FeatureClass targetFeatureClass = targetLayer.GetFeatureClass();
+                if (targetFeatureClass == null)
+                    return;
+
+                // Resolve field definitions for both source and target so we can map by name.
+                using FeatureClassDefinition sourceDef = _hluFeatureClass.GetDefinition();
+                using FeatureClassDefinition targetDef = targetFeatureClass.GetDefinition();
+
+                IReadOnlyList<Field> sourceFields = sourceDef.GetFields();
+                IReadOnlyList<Field> targetFields = targetDef.GetFields();
+
+                string targetShapeField = targetDef.GetShapeField();
+
+                // Build a mapping: source field index → target field index, for all copyable fields.
+                // Exclude system/read-only fields (OID, shape length/area) and the shape field itself
+                // (geometry is copied explicitly via SetShape).
+                HashSet<string> skipFields = new(StringComparer.OrdinalIgnoreCase)
+                {
+                    sourceDef.GetObjectIDField(),
+                    sourceDef.GetShapeField(),
+                    "Shape_Length", "SHAPE_Length",
+                    "Shape_Area",   "SHAPE_Area",
+                    "GlobalID",     "GLOBALID"
+                };
+
+                // Map source field index → target field index for fields that exist in both layers.
+                List<(int SourceIdx, int TargetIdx)> fieldMap = [];
+
+                for (int si = 0; si < sourceFields.Count; si++)
+                {
+                    Field sf = sourceFields[si];
+                    if (skipFields.Contains(sf.Name))
+                        continue;
+
+                    // Find matching field in target by name (case-insensitive).
+                    for (int ti = 0; ti < targetFields.Count; ti++)
+                    {
+                        if (string.Equals(sf.Name, targetFields[ti].Name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            fieldMap.Add((si, ti));
+                            break;
+                        }
+                    }
+                }
+
+                Table sourceTable = _hluFeatureClass as Table;
+                Table targetTable = targetFeatureClass as Table;
+
+                // Queue inserts into the target and deletes from the source in one callback.
+                // Features are streamed directly from source to target inside the callback —
+                // no geometry buffer is held in memory — so this scales to any feature count.
+                editOperation.Callback(context =>
+                {
+                    // Pass 1: stream source features directly into the target.
+                    using (RowCursor sourceCursor = _hluFeatureClass.Search(qf, false))
+                    using (InsertCursor insertCursor = targetFeatureClass.CreateInsertCursor())
+                    using (RowBuffer rowBuffer = targetFeatureClass.CreateRowBuffer())
+                    {
+                        while (sourceCursor.MoveNext())
+                        {
+                            using Feature sourceFeature = sourceCursor.Current as Feature;
+                            if (sourceFeature == null)
+                                continue;
+
+                            // Copy attributes into the reusable row buffer.
+                            foreach ((int si, int ti) in fieldMap)
+                                rowBuffer[ti] = sourceFeature[si] ?? DBNull.Value;
+
+                            // Copy geometry.
+                            Geometry shape = sourceFeature.GetShape();
+                            if (shape != null && !string.IsNullOrEmpty(targetShapeField))
+                                rowBuffer[targetShapeField] = shape;
+
+                            insertCursor.Insert(rowBuffer);
+                        }
+
+                        // Flush any buffered inserts to the datastore.
+                        insertCursor.Flush();
+                    }
+
+                    // Pass 2: delete source features using the same where clause filter.
+                    // Avoids building a potentially huge OID list.
+                    using (RowCursor deleteCursor = _hluFeatureClass.Search(qf, false))
+                    {
+                        while (deleteCursor.MoveNext())
+                        {
+                            using Row row = deleteCursor.Current;
+                            row.Delete();
+                        }
+                    }
+
+                    // Invalidate at table level (one call each) rather than per row.
+                    context.Invalidate(sourceTable);
+                    context.Invalidate(targetTable);
+                }, sourceTable, targetTable);
+            });
+
+            return matchingCount;
+        }
+
+        #endregion Reassign
+
         #region HLU Layer Management
 
         /// <summary>
@@ -3750,6 +4769,72 @@ namespace HLU.GISApplication
             get
             {
                 return _hluGeometryType;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether the active HLU layer's underlying feature class is located at the
+        /// specified workspace and feature class name. Used to detect whether a chosen output
+        /// path (e.g. for a Bulk Load staging layer or export) would collide with the layer that
+        /// is currently active and in use, before any attempt is made to overwrite it.
+        /// </summary>
+        /// <param name="workspacePath">The candidate output workspace path (folder for shapefiles, .gdb path for geodatabase).</param>
+        /// <param name="featureClassName">The candidate output feature class name (including .shp for shapefiles).</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result is true if the
+        /// active HLU layer's feature class matches the specified workspace and name; otherwise false.
+        /// </returns>
+        public async Task<bool> IsActiveHluLayerPathAsync(string workspacePath, string featureClassName)
+        {
+            if (_hluFeatureClass == null ||
+                string.IsNullOrEmpty(workspacePath) ||
+                string.IsNullOrEmpty(featureClassName))
+                return false;
+
+            try
+            {
+                return await QueuedTask.Run(() =>
+                {
+                    using Datastore datastore = _hluFeatureClass.GetDatastore();
+
+                    // Get the workspace path for the active HLU layer's feature class.
+                    string activeWorkspacePath = datastore switch
+                    {
+                        ArcGIS.Core.Data.FileSystemDatastore fsDatastore => fsDatastore.GetPath()?.LocalPath,
+                        Geodatabase gdb => gdb.GetPath()?.LocalPath,
+                        _ => null
+                    };
+
+                    if (string.IsNullOrEmpty(activeWorkspacePath))
+                        return false;
+
+                    // Get the active HLU layer's feature class name (strip any .shp extension for comparison).
+                    string activeFeatureClassName = _hluFeatureClass.GetName();
+
+                    // Normalise the candidate feature class name in the same way (strip .shp if present).
+                    string candidateFeatureClassName = featureClassName.EndsWith(".shp", StringComparison.OrdinalIgnoreCase)
+                        ? featureClassName[..^4]
+                        : featureClassName;
+
+                    // Compare the workspace paths and feature class names (case-insensitive, ignoring trailing separators).
+                    bool sameWorkspace = string.Equals(
+                        activeWorkspacePath.TrimEnd('\\', '/'),
+                        workspacePath.TrimEnd('\\', '/'),
+                        StringComparison.OrdinalIgnoreCase);
+
+                    bool sameName = string.Equals(
+                        activeFeatureClassName,
+                        candidateFeatureClassName,
+                        StringComparison.OrdinalIgnoreCase);
+
+                    return sameWorkspace && sameName;
+                });
+            }
+            catch
+            {
+                // If the check cannot be performed for any reason, err on the side of caution
+                // and report no collision so the existing delete-based safeguard still applies.
+                return false;
             }
         }
 
@@ -3936,8 +5021,11 @@ namespace HLU.GISApplication
                 // Check for length match if string type.
                 if (expectedType == FieldType.String && expectedMaxLength > 0)
                 {
-                    // If the field length exceeds the expected maximum length, return -1.
-                    if (field.Length > expectedMaxLength)
+                    // If the field length is less than the expected maximum length, return -1.
+                    // Allow fields that are the same length or longer to be valid (shapefiles may have
+                    // been created with longer field lengths, and we want to allow them to be recognized
+                    // as valid HLU layers as long as they meet the minimum required length).
+                    if (field.Length < expectedMaxLength)
                         return -1;
                 }
 

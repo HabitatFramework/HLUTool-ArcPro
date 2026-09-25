@@ -20,6 +20,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using HLU.Data;
@@ -43,7 +44,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains methods to perform logical and physical merges of selected GIS features.
     /// </summary>
-    class ViewModelWindowMainMerge
+    internal class ViewModelWindowMainMerge
     {
         #region Fields
 
@@ -147,32 +148,32 @@ namespace HLU.UI.ViewModel
             switch (_viewModelMain.GisLayerType)
             {
                 case HluGeometryTypes.Line:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_lines;
-                    _viewModelMain.GetIncidMMLineRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                        _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                        ViewModelWindowMain.IncidPageSize, t), ref t);
-                    selectTable = t;
-                    break;
-                }
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_lines;
+                        _viewModelMain.GetIncidMMLineRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                            _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
+                            ViewModelWindowMain.IncidPageSize, t), ref t);
+                        selectTable = t;
+                        break;
+                    }
                 case HluGeometryTypes.Point:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_points;
-                    _viewModelMain.GetIncidMMPointRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                        _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                        ViewModelWindowMain.IncidPageSize, t), ref t);
-                    selectTable = t;
-                    break;
-                }
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_points;
+                        _viewModelMain.GetIncidMMPointRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                            _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
+                            ViewModelWindowMain.IncidPageSize, t), ref t);
+                        selectTable = t;
+                        break;
+                    }
                 default:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_polygons;
-                    _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                        _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                        ViewModelWindowMain.IncidPageSize, t), ref t);
-                    selectTable = t;
-                    break;
-                }
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_polygons;
+                        _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                            _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
+                            ViewModelWindowMain.IncidPageSize, t), ref t);
+                        selectTable = t;
+                        break;
+                    }
             }
 
             // Check there are DB copy rows to update.
@@ -214,7 +215,7 @@ namespace HLU.UI.ViewModel
             if (_mergeResultFeatureIndex == -1)
                 return false;
 
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Merging ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Merging records ...");
             bool success = true;
 
             // Check if a transaction is already started.
@@ -453,7 +454,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Save edits to clear the pending edit state
-                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                bool saved = await Project.Current.SaveEditsAsync();
                 if (!saved)
                     throw new HLUToolException("GIS edits were applied but could not be saved.");
 
@@ -606,24 +607,24 @@ namespace HLU.UI.ViewModel
             switch (_viewModelMain.GisLayerType)
             {
                 case HluGeometryTypes.Line:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_lines;
-                    _viewModelMain.GetIncidMMLineRows(selectWhereClause2, ref t);
-                    break;
-                }
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_lines;
+                        _viewModelMain.GetIncidMMLineRows(selectWhereClause2, ref t);
+                        break;
+                    }
                 case HluGeometryTypes.Point:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_points;
-                    _viewModelMain.GetIncidMMPointRows(selectWhereClause2, ref t);
-                    break;
-                }
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_points;
+                        _viewModelMain.GetIncidMMPointRows(selectWhereClause2, ref t);
+                        break;
+                    }
                 default:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_polygons;
-                    _viewModelMain.GetIncidMMPolygonRows(selectWhereClause2, ref t);
-                    break;
-                }
-}
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_polygons;
+                        _viewModelMain.GetIncidMMPolygonRows(selectWhereClause2, ref t);
+                        break;
+                    }
+            }
 
             // Check there are DB copy rows to update.
             if (selectTable.Rows.Count == 0)
@@ -661,7 +662,7 @@ namespace HLU.UI.ViewModel
             if (_mergeResultFeatureIndex == -1)
                 return false;
 
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Merging ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Merging features ...");
             bool success = true;
 
             // Check if a transaction is already started.
@@ -778,7 +779,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Save edits to clear the pending edit state
-                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                bool saved = await Project.Current.SaveEditsAsync();
                 if (!saved)
                     throw new HLUToolException("GIS edits were applied but could not be saved.");
 
@@ -931,10 +932,13 @@ namespace HLU.UI.ViewModel
                     // Execute the delete statement.
                     try
                     {
-                        _viewModelMain.DataBase.ExecuteNonQuery(
+                        int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                             deleteStatement,
                             _viewModelMain.DataBase.Connection.ConnectionTimeout,
                             CommandType.Text);
+
+                        if (rowsAffected == -1)
+                            throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                     }
                     catch (Exception ex)
                     {
@@ -945,10 +949,13 @@ namespace HLU.UI.ViewModel
                 // Execute the update statement.
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         updateStatement,
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {
@@ -1020,10 +1027,13 @@ namespace HLU.UI.ViewModel
             // Execute the update statement within the caller's transaction.
             try
             {
-                _viewModelMain.DataBase.ExecuteNonQuery(
+                int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                     updateStatement,
                     _viewModelMain.DataBase.Connection.ConnectionTimeout,
                     CommandType.Text);
+
+                if (rowsAffected == -1)
+                    throw new Exception(_viewModelMain.DataBase.ErrorMessage);
             }
             catch (Exception ex)
             {
@@ -1087,10 +1097,13 @@ namespace HLU.UI.ViewModel
             // Execute the update statement within the caller's transaction.
             try
             {
-                _viewModelMain.DataBase.ExecuteNonQuery(
+                int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                     updateStatement,
                     _viewModelMain.DataBase.Connection.ConnectionTimeout,
                     CommandType.Text);
+
+                if (rowsAffected == -1)
+                    throw new Exception(_viewModelMain.DataBase.ErrorMessage);
             }
             catch (Exception ex)
             {

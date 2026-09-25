@@ -93,11 +93,13 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanFilterByAttributes and main window visibility.
-            bool canFilterByAttributes = _viewModel.CanFilterByAttributes && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = canFilterByAttributes;
+            Enabled = _viewModel.CanFilterByAttributes && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 Bulk Update mode is active\n\u2022 There are no features to filter\n\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 Bulk Update mode is active\n" +
+                "\u2022 There are no features to filter\n" +
+                "\u2022 The main window is not visible";
         }
 
         #endregion Overrides

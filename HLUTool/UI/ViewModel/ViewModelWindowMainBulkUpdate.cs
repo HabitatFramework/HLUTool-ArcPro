@@ -20,6 +20,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using HLU.Data;
@@ -47,7 +48,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains the view model for the main window bulk update functionality.
     /// </summary>
-    class ViewModelWindowMainBulkUpdate
+    internal class ViewModelWindowMainBulkUpdate
     {
         #region Fields
 
@@ -266,7 +267,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Applying bulk update ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Applying bulk update in database ...");
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -347,9 +348,9 @@ namespace HLU.UI.ViewModel
                     updateStatementIncid = String.Format("{0}, {1} = {2}, {3} = {4}",
                         updateStatementIncid,
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_habitatColumn.ColumnName),
-                        _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_habitat),
+                        _viewModelMain.DataBase.QuoteValue(DBNull.Value),
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_summaryColumn.ColumnName),
-                        _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_summary));
+                        _viewModelMain.DataBase.QuoteValue(DBNull.Value));
                 }
 
                 // Finally, add the where clause to the update command
@@ -429,6 +430,8 @@ namespace HLU.UI.ViewModel
                         ihsMultiplexDeleteStatements, secondaryDelStatement, _bulkDeleteOrphanBapHabitats, _bulkDeletePotentialBapHabitats);
                 }
 
+                _viewModelMain.ChangeCursor(Cursors.Wait, "Applying bulk update in GIS ...");
+
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
                 await BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.BulkUpdate, nowDtTm, editOperation);
 
@@ -461,7 +464,7 @@ namespace HLU.UI.ViewModel
 
                 // Show error message
                 MessageBox.Show(String.Format("Bulk update failed. The error message returned was:\n\n{0}",
-                    ex.Message), "HLU: Bulk Update", MessageBoxButton.OK, MessageBoxImage.Error);
+                    exMessage), "HLU: Bulk Update", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -596,7 +599,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Applying OSMM bulk update ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Applying OSMM bulk update in database ...");
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -868,6 +871,8 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
+                _viewModelMain.ChangeCursor(Cursors.Wait, "Applying OSMM bulk update in GIS ...");
+
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
                 await BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.OSMMUpdate, nowDtTm, editOperation);
 
@@ -900,7 +905,7 @@ namespace HLU.UI.ViewModel
 
                 // Show error message
                 MessageBox.Show(String.Format("OSMM Bulk update failed. The error message returned was:\n\n{0}",
-                    ex.Message), "HLU: OSMM Bulk Update", MessageBoxButton.OK, MessageBoxImage.Error);
+                    exMessage), "HLU: OSMM Bulk Update", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -1001,10 +1006,13 @@ namespace HLU.UI.ViewModel
             {
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         String.Format(updateStatementIncid, currIncid),
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {
@@ -1020,10 +1028,13 @@ namespace HLU.UI.ViewModel
             {
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         String.Format(secondaryDeleteStatement, currIncid),
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {
@@ -1040,10 +1051,13 @@ namespace HLU.UI.ViewModel
                 foreach (string s in ihsMultiplexDeleteStatements)
                     try
                     {
-                        _viewModelMain.DataBase.ExecuteNonQuery(
+                        int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                             String.Format(s, currIncid),
                             _viewModelMain.DataBase.Connection.ConnectionTimeout,
                             CommandType.Text);
+
+                        if (rowsAffected == -1)
+                            throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                     }
                     catch (Exception ex)
                     {
@@ -1059,10 +1073,13 @@ namespace HLU.UI.ViewModel
             {
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         String.Format(updateStatementIncidOSMMUpdates, currIncid),
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {
@@ -1556,11 +1573,14 @@ namespace HLU.UI.ViewModel
                 {
                     try
                     {
-                        _viewModelMain.DataBase.ExecuteNonQuery(
+                        int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                             String.Format(incidMMPolygonsUpdateCmdTemplate,
                                 _viewModelMain.DataBase.WhereClause(false, true, true, whereClause)),
                             _viewModelMain.DataBase.Connection.ConnectionTimeout,
                             CommandType.Text);
+
+                        if (rowsAffected == -1)
+                            throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                     }
                     catch (Exception ex)
                     {
@@ -1619,7 +1639,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Save edits to clear the pending edit state
-                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                bool saved = await Project.Current.SaveEditsAsync();
                 if (!saved)
                     throw new HLUToolException("GIS edits were applied but could not be saved.");
             }
@@ -1771,7 +1791,6 @@ namespace HLU.UI.ViewModel
             System.Array.ForEach([.. dbRowsEnum],
                 new Action<R>(r => adapter.Delete(r)));
 
-            // Set the property name for the primary key
             // Set the property name for the primary key
             string recordIdPropertyName = String.Concat(dbRows.TableName.Split('_')
                 .Select(s => String.Format("{0}{1}", char.ToUpper(s[0]), s.Substring(1))))

@@ -76,11 +76,14 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanMerge and main window visibility.
-            bool CanMerge = (_viewModel.CanMerge && _viewModel.GridMainVisibility == Visibility.Visible);
-            Enabled = CanMerge;
+            Enabled = (_viewModel.CanMerge && _viewModel.GridMainVisibility == Visibility.Visible);
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 No reason or process are selected\n\u2022 No merge is possible\n\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 The tool is not in normal update mode\n" +
+                "\u2022 No reason or process are selected\n" +
+                "\u2022 No merge is possible\n" +
+                "\u2022 The main window is not visible";
         }
 
         /// <summary>

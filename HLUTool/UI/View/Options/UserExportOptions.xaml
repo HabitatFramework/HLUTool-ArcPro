@@ -47,7 +47,7 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid x:Name="GridExportPath" Grid.Row="0">
+                    <Grid x:Name="GridDefaultExportPath" Grid.Row="0">
 
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -62,7 +62,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Label
-                                x:Name="LabelExportPath"
+                                x:Name="LabelDefaultExportPath"
                                 Grid.Row="0"
                                 Grid.Column="0"
                                 HorizontalAlignment="Left"
@@ -85,18 +85,18 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBox
-                                x:Name="TextBoxExportPath"
+                                x:Name="TextBoxDefaultExportPath"
                                 Grid.Column="1"
                                 Height="24"
                                 BorderThickness="1"
                                 IsEnabled="False"
                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                                Text="{Binding ExportPath, ValidatesOnDataErrors=True}"
+                                Text="{Binding DefaultExportPath, ValidatesOnDataErrors=True}"
                                 TextAlignment="Left"
                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 ToolTipService.ShowOnDisabled="True" />
                             <Button
-                                x:Name="ButtonBrowseExport"
+                                x:Name="ButtonBrowseDefaultExportPath"
                                 Grid.Column="2"
                                 Width="24"
                                 Height="24"
@@ -105,7 +105,7 @@
                                 Margin="4,0,0,0"
                                 Background="Transparent"
                                 BorderThickness="0"
-                                Command="{Binding BrowseExportPathCommand}"
+                                Command="{Binding BrowseDefaultExportPathCommand}"
                                 Style="{DynamicResource Esri_SmallButton}"
                                 ToolTip="Select default export path"
                                 ToolTipService.ShowOnDisabled="True">

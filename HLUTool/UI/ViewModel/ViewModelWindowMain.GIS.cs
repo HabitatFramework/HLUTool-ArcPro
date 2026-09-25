@@ -21,7 +21,6 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Core.Events;
-using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
@@ -33,6 +32,7 @@ using HLU.Exceptions;
 using HLU.GISApplication;
 using HLU.Helpers;
 using HLU.Properties;
+using HLU.UI.View;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -49,7 +49,7 @@ namespace HLU.UI.ViewModel
     /// GIS operations partial for ViewModelWindowMain.
     /// Contains: All ArcGIS Pro SDK interactions, map selection, layer management, spatial operations.
     /// </summary>
-    partial class ViewModelWindowMain
+    internal partial class ViewModelWindowMain
     {
         #region Fields
 
@@ -69,14 +69,13 @@ namespace HLU.UI.ViewModel
         private bool _mapMemberEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
         private bool _layersChangedEventsSubscribed;
-        private bool _editCompletedEventsSubscribed;
 
         #endregion Fields - Event Tracking
 
         #region Fields - Active Map/Layer
 
         private MapView _activeMapView;
-        string _activeLayerName;
+        private string _activeLayerName;
 
         #endregion Fields - Active Map/Layer
 
@@ -84,11 +83,13 @@ namespace HLU.UI.ViewModel
 
         // The IDs of the currently selected incids, toids and fragments in GIS (set in AnalyzeGisSelectionSet).
         private IEnumerable<string> _incidsSelectedMap;
+
         private IEnumerable<string> _toidsSelectedMap;
         private IEnumerable<string> _fragsSelectedMap;
 
         // How many incids, toids,  fragments and features are selected in GIS (set in AnalyzeGisSelectionSet).
         private int _selectedIncidsInGISCount = 0;
+
         private int _selectedToidsInGISCount = 0;
         private int _selectedFragsInGISCount = 0;
         private int _selectedFeaturesInGISCount = 0;
@@ -96,10 +97,12 @@ namespace HLU.UI.ViewModel
         // How many incids and fragments are selected in the database for the current GIS selection
         // (set whenever a filter is applied and in ExpectedSelectionFeatures).
         private int _selectedIncidsInDBCount = 0;
+
         private int _selectedFragsInDBCount = 0;
 
         // How many toids and fragments are selected in GIS and the database for the current incid (set in CountFrags).
         private int _currentIncidToidsInGISCount = 0;
+
         private int _currentIncidFragsInGISCount = 0;
         private int _currentIncidToidsInDBCount = 0;
         private int _currentIncidFragsInDBCount = 0;
@@ -110,6 +113,7 @@ namespace HLU.UI.ViewModel
 
         // Can the current selection be split or merged (set in RefreshSplitMergeStatus).
         private bool _canPhysicallySplit;
+
         private bool _canLogicallySplit;
         private bool _canPhysicallyMerge;
         private bool _canLogicallyMerge;
@@ -122,6 +126,15 @@ namespace HLU.UI.ViewModel
         private bool _canInsertFeature;
 
         #endregion Fields - Feature Insert
+
+        #region Fields - Bulk Load/Unload
+
+        // Can the Bulk unload or load operation be performed.
+        private bool _canBulkUnload;
+
+        private bool _canBulkLoad;
+
+        #endregion Fields - Bulk Load/Unload
 
         #endregion Fields
 
@@ -478,6 +491,32 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties - Feature Insert Commands
 
+        #region Properties - Bulk Load/Unload Commands
+
+        /// <summary>
+        /// Can a bulk unload operation be performed?
+        /// Unload removes selected GIS features that already have an INCID, deletes their shadow
+        /// map-match rows, and cleans up any orphaned INCID records.
+        /// </summary>
+        /// <value><c>true</c> if an bulk unload can be performed; otherwise, <c>false</c>.</value>
+        public bool CanBulkUnload => _canBulkUnload;
+
+        /// <summary>
+        /// Can a bulk load operation be performed?
+        /// Load registers selected new (null-INCID) GIS features under new INCID records, exactly
+        /// as the separate-INCID feature insert does, but tagged with the OSMMLoad history operation.
+        /// </summary>
+        /// <value><c>true</c> if a bulk load can be performed; otherwise, <c>false</c>.</value>
+        public bool CanBulkLoad => _canBulkLoad;
+
+        /// <summary>
+        /// Can either an bulk unload or load operation be performed?
+        /// </summary>
+        /// <value><c>true</c> if any bulk load/unload operation can be performed; otherwise, <c>false</c>.</value>
+        public bool CanBulkLoadUnload => _canBulkUnload || _canBulkLoad;
+
+        #endregion Properties - Bulk Load/Unload Commands
+
         #endregion Properties
 
         #region Methods
@@ -533,6 +572,11 @@ namespace HLU.UI.ViewModel
                 GridMainVisibility = Visibility.Hidden;
                 return;
             }
+
+            // Check for any pending OSMM updates now that a valid map is active.
+            // This also covers the cold-start case where InitializeToolPaneAsync ran
+            // before ArcGIS Pro had an active map, so the check was skipped there.
+            await CheckAnyOSMMUpdatesAsync();
 
             // Make the UI controls visible.
             GridMainVisibility = Visibility.Visible;
@@ -590,19 +634,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Handles the event raised when an edit operation completes.
-        /// Recomputes CanEdit in case the editing session state has changed.
-        /// </summary>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        private Task OnEditCompleted(EditCompletedEventArgs args)
-        {
-            // Recomputes whether editing is currently possible.
-            RefreshEditCapability();
-
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
         /// Event when the project is closed. Recomputes whether editing is currently possible and makes the UI controls hidden.
         /// </summary>
         /// <param name="obj">Event arguments containing details about the project that was closed.</param>
@@ -623,63 +654,39 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Event when the DockPane is hidden.
+        /// Event when the DockPane is hidden (user clicked X or pane was explicitly closed).
+        /// This is different from OnShow(false) which is also called when switching tabs.
         /// </summary>
         protected override void OnHidden()
         {
             // Toggle the tab state to hidden.
             ToggleState("HLUTool_tab_state", false);
+
+            //// Perform complete application cleanup when the pane is explicitly hidden/closed
+            //// This allows fresh initialization when the user reopens the pane
+            //UnloadApplication();
         }
 
         /// <summary>
         /// Event when the DockPane is disposed. Unsubscribes from all events to prevent memory
-        /// leaks and calls base to allow parent cleanup.
+        /// leaks, performs complete cleanup, and calls base to allow parent cleanup.
         /// </summary>
         protected override void OnDispose()
         {
-            // Unsubscribe from map events
-            if (_mapEventsSubscribed)
+            try
             {
-                ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
-                _mapEventsSubscribed = false;
-            }
+                WriteInitLog("OnDispose called");
 
-            // Unsubscribe from layer events
-            if (_layersChangedEventsSubscribed)
-            {
-                LayersAddedEvent.Unsubscribe(OnLayersAdded);
-                LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
-                _layersChangedEventsSubscribed = false;
+                // Perform complete application cleanup
+                // This ensures resources are released whether the pane is hidden or disposed
+                UnloadApplication();
             }
-
-            // Unsubscribe from editing events
-            if (_projectClosedEventsSubscribed)
+            catch (Exception ex)
             {
-                ProjectClosedEvent.Unsubscribe(OnProjectClosed);
-                _projectClosedEventsSubscribed = false;
+                // Log but don't throw - we're disposing
+                WriteInitLog($"OnDispose ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error during OnDispose: {ex}");
             }
-
-            // Unsubscribe from map member events
-            if (_mapMemberEventsSubscribed)
-            {
-                MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
-                _mapMemberEventsSubscribed = false;
-            }
-
-            // Unsubscribe from edit completed events
-            if (_editCompletedEventsSubscribed)
-            {
-                EditCompletedEvent.Unsubscribe(OnEditCompleted);
-                _editCompletedEventsSubscribed = false;
-            }
-
-            // Clean up all message timers
-            foreach (var timer in _messageTimers.Values)
-            {
-                timer?.Stop();
-                timer?.Dispose();
-            }
-            _messageTimers.Clear();
 
             // Call base to allow parent cleanup
             base.OnDispose();
@@ -777,6 +784,9 @@ namespace HLU.UI.ViewModel
 
                     return;
                 }
+
+                // Set the status to processing and the cursor to wait.
+                ChangeCursor(Cursors.Wait, "Zooming to selection ...");
 
                 // Zoom to the GIS selection (if auto zoom configured).
                 await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
@@ -1090,9 +1100,9 @@ namespace HLU.UI.ViewModel
                     // Display a message about the geometry type.
                     string geomTypeName = _gisLayerType switch
                     {
-                        HluGeometryTypes.Line  => "line",
+                        HluGeometryTypes.Line => "line",
                         HluGeometryTypes.Point => "point",
-                        _                      => "polygon"
+                        _ => "polygon"
                     };
 
                     // Refresh all UI bindings so every property reflects the cleared state.
@@ -1140,9 +1150,9 @@ namespace HLU.UI.ViewModel
                     // Display a warning message.
                     string geomTypeName = _gisLayerType switch
                     {
-                        HluGeometryTypes.Line  => "line",
+                        HluGeometryTypes.Line => "line",
                         HluGeometryTypes.Point => "point",
-                        _                      => "polygon"
+                        _ => "polygon"
                     };
 
                     // Show a warning if no features have been registered in the database yet,
@@ -1191,7 +1201,7 @@ namespace HLU.UI.ViewModel
             try
             {
                 // Set the status to processing and the cursor to wait.
-                ChangeCursor(Cursors.Wait, "Selecting in GIS ...");
+                ChangeCursor(Cursors.Wait, "Counting expected features ...");
 
                 // Backup the current selection (filter).
                 DataTable incidSelectionBackup = _incidSelection;
@@ -1218,6 +1228,9 @@ namespace HLU.UI.ViewModel
 
                 // Find the expected number of incids to be selected in GIS.
                 int expectedNumIncids = _incidSelection.Rows.Count;
+
+                // Set the status to processing and the cursor to wait.
+                ChangeCursor(Cursors.Wait, "Selecting in GIS ...");
 
                 // Select the required incid(s) in GIS and read the selection.
                 if (await PerformGisSelectionAsync(true, expectedNumFeatures, expectedNumIncids))
@@ -1248,6 +1261,9 @@ namespace HLU.UI.ViewModel
 
                         return;
                     }
+
+                    // Set the status to processing and the cursor to wait.
+                    ChangeCursor(Cursors.Wait, "Zooming to selection ...");
 
                     // Zoom to the GIS selection (if auto zoom configured).
                     await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
@@ -1830,6 +1846,7 @@ namespace HLU.UI.ViewModel
             RefreshSplitEnablement();
             RefreshMergeEnablement();
             RefreshInsertFeatureEnablement();
+            RefreshOSMMLoadUnloadEnablement();
         }
 
         #endregion Split/Merge Capability
@@ -1882,6 +1899,66 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Feature Insert Capability
+
+        #region Bulk Load/Unload Capability
+
+        /// <summary>
+        /// Computes whether an OSMM unload can be performed. The selection must contain at least one
+        /// registered (non-null INCID) feature that exists in the database.
+        /// </summary>
+        private bool ComputeCanOSMMUnload()
+        {
+            // Must be in a mode that allows edits and ready for edit operations.
+            if (!IsEditOperationModeReady)
+                return false;
+
+            // There must be at least one feature selected.
+            if (_gisSelection == null || _gisSelection.Rows.Count == 0)
+                return false;
+
+            // All selected features must have a non-null, non-empty INCID (i.e. they are already
+            // registered in the database and can therefore be unloaded).
+            return _incidsSelectedMap != null &&
+                   _incidsSelectedMap.Any() &&
+                   _incidsSelectedMap.All(i => !string.IsNullOrEmpty(i));
+        }
+
+        /// <summary>
+        /// Computes whether an bulk load can be performed.
+        /// Bulk Load requires normal update mode (not bulk update, OSMM review, or OSMM bulk update modes).
+        /// Note: Bulk Load operates on a source layer (not the active HLU layer), so selection state
+        /// is validated later in the load workflow, not here.
+        /// </summary>
+        private bool ComputeCanOSMMLoad()
+        {
+            // Must be in normal update mode (not bulk, OSMM review, or OSMM bulk modes).
+            return IsEditReady &&
+                   !IsBulkMode &&
+                   !IsOsmmReviewMode &&
+                   !IsOsmmBulkMode;
+        }
+
+        /// <summary>
+        /// Refreshes the cached bulk load/unload enablement values.
+        /// </summary>
+        private void RefreshOSMMLoadUnloadEnablement()
+        {
+            bool canUnload = ComputeCanOSMMUnload();
+            bool canLoad = ComputeCanOSMMLoad();
+
+            bool changed = (_canBulkUnload != canUnload) || (_canBulkLoad != canLoad);
+            _canBulkUnload = canUnload;
+            _canBulkLoad = canLoad;
+
+            if (changed)
+            {
+                OnPropertyChanged(nameof(CanBulkUnload));
+                OnPropertyChanged(nameof(CanBulkLoad));
+                OnPropertyChanged(nameof(CanBulkLoadUnload));
+            }
+        }
+
+        #endregion Bulk Load/Unload Capability
 
         #region Split/Merge Action
 
@@ -1993,6 +2070,31 @@ namespace HLU.UI.ViewModel
                 // Notify user with pop-up window
                 NotifySplitMerge("Logical merge completed.");
             }
+        }
+
+        /// <summary>
+        /// Initiates the reassign features process.
+        /// </summary>
+        /// <remarks>This method initiates the reassign features process by creating an instance of the
+        /// ViewModelWindowMainReassign class and calling its InitiateReassign method.</remarks>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task ReassignFeaturesAsync()
+        {
+            // Clear any existing messages
+            ClearAllMessages();
+
+            // Get the GIS layer selection again (just in case).
+            await GetMapSelectionAsync(false);
+
+            // Create ViewModel for reassign class.
+            ViewModelWindowMainReassign vmReassign = new(this);
+
+            // Initiate the reassign process.
+            vmReassign.InitiateReassign();
+
+            // The method completes synchronously, but is declared as async Task to maintain
+            // consistency with other similar methods like LogicalMergeAsync and OSMMLoadAsync.
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2129,6 +2231,150 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Feature Insert Action
+
+        #region Bulk Load/Unload Action
+
+        /// <summary>
+        /// Removes the currently selected registered GIS features from the layer, deletes their
+        /// shadow map-match rows, and cleans up any orphaned INCID records.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task OSMMUnloadAsync()
+        {
+            // Clear any existing messages.
+            ClearAllMessages();
+
+            // Re-read the map selection to ensure it is current.
+            await GetMapSelectionAsync(false);
+
+            // Prompt the user to confirm they have backed up the features before unloading.
+            MessageBoxResult result = MessageBox.Show(
+                "The Bulk Unload operation will permanently remove the selected features from the active layer and delete their associated database records.\n\n" +
+                "Have you exported the selected features as a backup or snapshot and performed a database backup before proceeding?\n\n" +
+                "Click 'Yes' to continue with the unload operation.\n" +
+                "Click 'No' to cancel and perform an export and create a backup first.",
+                "Bulk Unload - Backup Reminder",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            // If the user clicked No, cancel the operation.
+            if (result == MessageBoxResult.No)
+            {
+                ShowInfo("Bulk Unload cancelled by user.", MessageCategory.OSMMLoad);
+                return;
+            }
+
+            ViewModelWindowMainBulkUnload vmUnload = new(this);
+            int featureCount = await vmUnload.OSMMUnloadAsync();
+            if (featureCount > 0)
+            {
+                ShowSuccess(
+                    $"Bulk Unload completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} removed.",
+                    MessageCategory.OSMMLoad);
+            }
+        }
+
+        /// <summary>
+        /// Registers each currently selected new (null-INCID) GIS feature under its own new INCID,
+        /// using habitat attributes already present on the feature, and tags history with the
+        /// OSMMLoad operation code.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task OSMMLoadAsync()
+        {
+            // Clear any existing messages.
+            ClearAllMessages();
+
+            // Check there are no outstanding edits before proceeding, as the
+            // load will change the current selection/map state.
+            MessageBoxResult userResponse = CheckDirty();
+            if (userResponse == MessageBoxResult.Cancel)
+                return;
+
+            // Show the Bulk Load setup dialog so the user can select the source layer
+            // and map its fields to the lut_osmm_habitat_xref lookup columns.
+            var dialogResult = await ShowOSMMLoadDialogAsync();
+            if (dialogResult == default)
+                return; // user cancelled
+
+            (OsmmFieldMapping fieldMapping, bool selectedOnly, OutputType outputType) = dialogResult;
+
+            // Get the default bulk load path.
+            string bulkLoadPath = Settings.Default.DefaultBulkLoadPath;
+            if (string.IsNullOrEmpty(bulkLoadPath) || !System.IO.Directory.Exists(bulkLoadPath))
+                bulkLoadPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            // Prompt the user for the staging layer output location and feature class name.
+            var bulkLoadDetails = await GISApplication.BulkLoadPromptAsync(
+                bulkLoadPath,
+                outputType == OutputType.FileGeodatabase);
+
+            // If the user didn't provide export details then exit.
+            if (bulkLoadDetails == default)
+            {
+                ShowInfo("Bulk Load cancelled by user.", MessageCategory.OSMMLoad);
+                return;
+            }
+
+            // Extract the output details.
+            string outputWorkspace = bulkLoadDetails.outputWorkspace;
+            string outputFeatureClassName = bulkLoadDetails.outputFeatureClassName;
+
+            ViewModelWindowMainBulkLoad vmLoad = new(this);
+            var (success, featureCount, incidCount) = await vmLoad.OSMMLoadAsync(
+                fieldMapping, outputWorkspace, outputFeatureClassName, selectedOnly);
+
+            if (success)
+            {
+                ShowSuccess(
+                    $"Bulk Load completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against {incidCount} new {(incidCount == 1 ? "INCID" : "INCIDs")}.",
+                    MessageCategory.OSMMLoad);
+            }
+        }
+
+        /// <summary>
+        /// Creates, shows and awaits the Bulk Load setup dialog.
+        /// </summary>
+        /// <returns>
+        /// A tuple containing the <see cref="OsmmFieldMapping"/> chosen by the user, the selectedOnly flag,
+        /// and the output type; or default if the dialog was cancelled.
+        /// </returns>
+        private Task<(OsmmFieldMapping mapping, bool selectedOnly, OutputType outputType)> ShowOSMMLoadDialogAsync()
+        {
+            var tcs = new TaskCompletionSource<(OsmmFieldMapping, bool, OutputType)>();
+
+            var window = new WindowBulkLoad
+            {
+                Owner = FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Topmost = true
+            };
+
+            var vm = new ViewModelWindowBulkLoad(this);
+
+            vm.RequestClose -= OnOSMMLoadDialogClose; // safety
+            vm.RequestClose += OnOSMMLoadDialogClose;
+
+            window.DataContext = vm;
+
+            // Wire the close event to resolve the task.
+            vm.RequestClose += (apply, mapping, selectedOnly, outputType) =>
+            {
+                window.Close();
+                tcs.TrySetResult(apply ? (mapping, selectedOnly, outputType) : default);
+            };
+
+            window.ShowDialog();
+
+            return tcs.Task;
+        }
+
+        // Dummy handler to satisfy the -= safety unsubscription above (lambda is the real handler).
+        private static void OnOSMMLoadDialogClose(bool apply, OsmmFieldMapping mapping, bool selectedOnly, OutputType outputType)
+        {
+        }
+
+        #endregion Bulk Load/Unload Action
 
         #endregion Methods
     }

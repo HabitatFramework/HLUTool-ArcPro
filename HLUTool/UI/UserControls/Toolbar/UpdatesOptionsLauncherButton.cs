@@ -40,56 +40,64 @@ namespace HLU.UI.UserControls.Toolbar
 
         #endregion Fields
 
+        #region Constructor
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public UpdatesOptionsLauncherButton()
+        {
+            // Get the dockpane DAML id.
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
+            if (pane == null)
+                return;
+
+            // Get the ViewModel by casting the dockpane.
+            _viewModel = pane as ViewModelWindowMain;
+        }
+
+        #endregion Constructor
+
         #region Overrides
 
         protected override void OnClick()
         {
             try
             {
-                // Get the main ViewModel
-                DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
-                if (pane == null)
-                    return;
-
-                _viewModel = pane as ViewModelWindowMain;
-
-                // Ensure the window is shown on the UI thread
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                // Initialize the options window and its ViewModel
+                _windowOptions = new()
                 {
-                    // Initialize the options window and its ViewModel
-                    _windowOptions = new()
-                    {
-                        Owner = FrameworkApplication.Current.MainWindow,
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                        Topmost = true
-                    };
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
+                };
 
-                    // Initialize the ViewModel for the options window, passing necessary data from the main ViewModel
-                    _viewModelOptions = new()
-                    {
-                        DisplayName = "Options"
-                    };
+                // Initialize the ViewModel for the options window, passing necessary data from the main ViewModel
+                _viewModelOptions = new()
+                {
+                    DisplayName = "Options"
+                };
 
-                    // Set the selected tab to "Updates" in the User category
-                    var updatesTab = _viewModelOptions.NavigationItems
-                        .FirstOrDefault(n => n.Category == "User" && n.Name == "Updates");
+                // Set the selected tab to "Updates" in the User category
+                var updatesTab = _viewModelOptions.NavigationItems
+                    .FirstOrDefault(n => n.Category == "User" && n.Name == "Updates");
 
-                    // If the Updates tab is found, set it as the selected view
-                    if (updatesTab != null)
-                        _viewModelOptions.SelectedView = updatesTab;
+                // If the Updates tab is found, set it as the selected view
+                if (updatesTab != null)
+                    _viewModelOptions.SelectedView = updatesTab;
 
-                    // Subscribe to the RequestClose event to handle closing the options window and applying settings if needed
-                    _viewModelOptions.RequestClose += (applySettings) =>
-                    {
-                        _windowOptions.Close();
-                        if (applySettings)
-                            _viewModel.ApplySettings();
-                    };
+                // Subscribe to the RequestClose event to handle closing the options window and applying settings if needed
+                _viewModelOptions.RequestClose += (applySettings) =>
+                {
+                    _windowOptions.Close();
+                    if (applySettings)
+                        _viewModel.ApplySettings();
+                };
 
-                    // Set the DataContext of the options window to its ViewModel and show the window
-                    _windowOptions.DataContext = _viewModelOptions;
-                    _windowOptions.ShowDialog();
-                });
+                // Set the DataContext of the options window to its ViewModel and show the window
+                _windowOptions.DataContext = _viewModelOptions;
+                _windowOptions.ShowDialog();
             }
             catch (Exception ex)
             {

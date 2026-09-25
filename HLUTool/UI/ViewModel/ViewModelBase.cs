@@ -151,6 +151,7 @@ namespace HLU.UI.ViewModel
         }
 
 #if DEBUG
+
         /// <summary>
         /// Useful for ensuring that ViewModel objects are properly garbage collected.
         /// </summary>
@@ -159,6 +160,7 @@ namespace HLU.UI.ViewModel
             string msg = string.Format("{0} ({1}) ({2}) Finalized", this.GetType().Name, this.DisplayName, this.GetHashCode());
             System.Diagnostics.Debug.WriteLine(msg);
         }
+
 #endif
 
         #endregion IDisposable Members

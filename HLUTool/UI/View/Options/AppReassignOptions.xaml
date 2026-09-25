@@ -1,0 +1,121 @@
+<UserControl
+    x:Class="HLU.UI.View.AppReassignOptions"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+    xmlns:local="clr-namespace:HLU.UI.ViewModel"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOptions}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+                <ResourceDictionary Source="../Dictionary/ErrorMessageConverterDictionary.xaml" />
+                <ResourceDictionary Source="../Dictionary/ValidationTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel
+            Grid.Row="0"
+            MaxWidth="600"
+            Margin="4"
+            HorizontalAlignment="Left">
+
+            <Label
+                HorizontalAlignment="Left"
+                Content="Set application options for reassigning features"
+                FontSize="14"
+                FontWeight="Medium" />
+
+            <Expander
+                Margin="6,10,0,0"
+                Header="Reassign Rules"
+                IsExpanded="True">
+
+                <StackPanel Margin="12,4,4,4">
+
+                    <TextBlock
+                        Margin="0,0,0,6"
+                        Text="Define one or more rules used to reassign features to a new HLU layer. Each rule requires a unique name and a SQL WHERE clause that will be applied to select matching features."
+                        TextWrapping="Wrap" />
+
+                    <!--  Rules DataGrid  -->
+                    <DataGrid
+                        x:Name="DataGridReassignRules"
+                        MinHeight="120"
+                        MaxHeight="300"
+                        Padding="2,0"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="True"
+                        CanUserDeleteRows="True"
+                        CanUserReorderColumns="False"
+                        CanUserResizeColumns="True"
+                        GridLinesVisibility="Horizontal"
+                        HeadersVisibility="All"
+                        IsReadOnly="False"
+                        ItemsSource="{Binding ReassignRules}"
+                        RowHeaderWidth="20"
+                        RowHeight="24"
+                        RowStyle="{StaticResource DataGridRowWithValidation}"
+                        SelectionMode="Single"
+                        Style="{DynamicResource Esri_DataGrid}">
+
+                        <DataGrid.Columns>
+
+                            <DataGridTextColumn
+                                MinWidth="80"
+                                Binding="{Binding RuleName, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                                Header="Rule Name">
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Validation.ErrorTemplate" Value="{StaticResource ErrorTemplate}" />
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                            </DataGridTextColumn>
+
+                            <DataGridTextColumn
+                                Width="*"
+                                Binding="{Binding WhereClause, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                                Header="SQL WHERE Clause">
+                                <DataGridTextColumn.EditingElementStyle>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="Validation.ErrorTemplate" Value="{StaticResource ErrorTemplate}" />
+                                    </Style>
+                                </DataGridTextColumn.EditingElementStyle>
+                            </DataGridTextColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock
+                        Margin="0,4,0,0"
+                        FontStyle="Italic"
+                        Foreground="Gray"
+                        Text="Click on a row to edit it. Press Delete to remove the selected row. Type in the last empty row to add a new rule." />
+                </StackPanel>
+            </Expander>
+        </StackPanel>
+
+        <TextBlock
+            Grid.Row="1"
+            Margin="8,0,0,10"
+            HorizontalAlignment="Left"
+            FontWeight="Medium">
+            <Hyperlink
+                Command="{Binding OpenHyperlinkCommand}"
+                CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}"
+                NavigateUri="{Binding Hyperlink_AppReassignHelp}">
+                Learn more about application reassign options
+            </Hyperlink>
+        </TextBlock>
+    </Grid>
+</UserControl>

@@ -93,11 +93,13 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanPhysicallySplit and main window visibility.
-            bool canPhysicallySplit = _viewModel.CanPhysicallySplit && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = canPhysicallySplit;
+            Enabled = _viewModel.CanPhysicallySplit && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 No features are selected\n\u2022 The selected features cannot be split\n\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 No features are selected\n" +
+                "\u2022 The selected features cannot be split\n" +
+                "\u2022 The main window is not visible";
         }
 
         #endregion Overrides

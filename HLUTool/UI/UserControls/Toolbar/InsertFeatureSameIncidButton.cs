@@ -97,9 +97,10 @@ namespace HLU.UI.UserControls.Toolbar
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 No reason or process are selected\n" +
-                              "\u2022 The selected features already have an INCID\n" +
-                              "\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 No reason or process are selected\n" +
+                "\u2022 The selected features already have an INCID\n" +
+                "\u2022 The main window is not visible";
         }
 
         #endregion Overrides

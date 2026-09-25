@@ -92,10 +92,11 @@
                         IsEditable="True"
                         IsReadOnly="True"
                         ItemsSource="{Binding Path=ExportFormats, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        SelectedValue="{Binding Path=ExportID, ValidatesOnDataErrors=True}"
+                        SelectedValue="{Binding Path=ExportID, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                         SelectedValuePath="export_id"
                         Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                        ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
+                        ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
+                        Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
 
                     <!--  Output Type  -->
                     <Label
@@ -171,19 +172,17 @@
                     Grid.Column="1"
                     Margin="0,0,2,0"
                     Command="{Binding OkCommand}"
+                    Content="_OK"
                     IsDefault="True"
-                    Style="{DynamicResource Esri_Button}">
-                    _OK
-                </Button>
+                    Style="{DynamicResource Esri_Button}" />
                 <Button
                     Name="ButtonCancel"
                     Grid.Column="2"
                     Margin="2,0,0,0"
                     Command="{Binding CancelCommand}"
+                    Content="_Cancel"
                     IsCancel="True"
-                    Style="{DynamicResource Esri_Button}">
-                    _Cancel
-                </Button>
+                    Style="{DynamicResource Esri_Button}" />
             </Grid>
         </Grid>
     </DockPanel>

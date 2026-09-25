@@ -37,9 +37,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Forms;
@@ -64,12 +64,15 @@ namespace HLU.UI.ViewModel
         private ICommand _saveCommand;
         private ICommand _cancelCommand;
         private ICommand _browseSQLPathCommand;
-        private ICommand _browseExportPathCommand;
+        private ICommand _browseDefaultExportPathCommand;
+        private ICommand _browseDefaultBulkLoadPathCommand;
         private ICommand _browseWorkingFileGDBPathCommand;
         private ICommand _openHyperlinkCommand;
         private ICommand _resetDbConnectionCommand;
 
         private string _displayName = "Options";
+
+        private string _codeNone = Settings.Default.CodeNone;
 
         private HluDataSet.incid_mm_polygonsDataTable _incidMMPolygonsTable = new();
         private List<int> _gisIDColumnOrdinals;
@@ -113,22 +116,8 @@ namespace HLU.UI.ViewModel
         private string _bulkInterpretationQuality;
         private int? _bulkOSMMSourceId;
 
-        // User GIS options
-        private string[] _autoZoomToSelectionOptions;
-
-        private string _autoZoomToSelection;
-        private int? _minAutoZoom;
-        private int _maxAutoZoom;
-        private string _displayAreaUnits;
-        private string _displayDistanceUnits;
-        private int? _maxFeaturesGISSelect;
-        private string _workingFileGDBPath;
-
-        // User History options
-        private SelectionList<string> _historyColumns;
-
-        private int? _historyDisplayLastN;
-        private bool _historyDisplayGeometry;
+        // Application Reassign options
+        private ObservableCollection<ReassignRule> _reassignRules;
 
         // User Interface options
         private bool _showGroupHeaders;
@@ -145,6 +134,17 @@ namespace HLU.UI.ViewModel
         private int? _messageAutoDismissInfo;
         private int? _messageAutoDismissSuccess;
 
+        // User GIS options
+        private string[] _autoZoomToSelectionOptions;
+
+        private string _autoZoomToSelection;
+        private int? _minAutoZoom;
+        private int _maxAutoZoom;
+        private string _displayAreaUnits;
+        private string _displayDistanceUnits;
+        private int? _gdbJoinThreshold;
+        private string _workingFileGDBPath;
+
         // User Update options
         private string _defaultReason;
 
@@ -155,21 +155,33 @@ namespace HLU.UI.ViewModel
         private string _secondaryCodeOrder;
         private bool _notifyOnSplitMerge;
 
+        // User Bulk Load options
+        private string _defaultBulkLoadPath;
+
+        private string _defaultBulkLoadLayer;
+
         // User SQL options
         private int? _getValueRows;
 
         private int _maxGetValueRows;
         private string _sqlPath;
 
+        // User History options
+        private SelectionList<string> _historyColumns;
+
+        private int? _historyDisplayLastN;
+        private bool _historyDisplayGeometry;
+
         // User Export options
-        private string _exportPath;
+        private string _defaultExportPath;
 
         private int? _maxFeaturesExport;
 
         // Backup variables
         private string _bakSQLPath;
 
-        private string _bakExportPath;
+        private string _bakDefaultExportPath;
+        private string _bakDefaultBulkLoadPath;
         private string _bakWorkingFileGDBPath;
 
         public ObservableCollection<NavigationItem> NavigationItems
@@ -247,20 +259,25 @@ namespace HLU.UI.ViewModel
             _maxAutoZoom = Settings.Default.MaxAutoZoom;
             _displayAreaUnits = Settings.Default.DisplayAreaUnits;
             _displayDistanceUnits = Settings.Default.DisplayDistanceUnits;
-            _maxFeaturesGISSelect = Settings.Default.MaxFeaturesGISSelect;
+            _gdbJoinThreshold = Math.Clamp(
+                Settings.Default.GdbJoinThreshold,
+                Settings.Default.GdbJoinThresholdMin,
+                Settings.Default.GdbJoinThresholdMax);
             _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
 
-            // Get the history column ordinals from the settings, excluding the GIS ID columns and
-            // shape columns.
+            // Get the history column ordinals from the settings, excluding the GIS ID columns,
+            // shape columns, and polygon_id.
             List<int> historyColumnOrdinals = [.. Settings.Default.HistoryColumnOrdinals.Cast<string>()
                 .Select(s => Int32.Parse(s)).Where(i => !_gisIDColumnOrdinals.Contains(i) &&
-                    !_incidMMPolygonsTable.Columns[i].ColumnName.StartsWith("shape_"))];
+                    !_incidMMPolygonsTable.Columns[i].ColumnName.StartsWith("shape_") &&
+                    _incidMMPolygonsTable.Columns[i].ColumnName != "polygon_id")];
 
             // Get the history columns for the options window by getting the column names from the incid table,
-            // excluding the GIS ID columns and shape columns.
+            // excluding the GIS ID columns, shape columns, and polygon_id.
             _historyColumns = new SelectionList<string>([.. _incidMMPolygonsTable.Columns.Cast<DataColumn>()
                 .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
-                    && !c.ColumnName.StartsWith("shape_"))
+                    && !c.ColumnName.StartsWith("shape_")
+                    && c.ColumnName != "polygon_id")
                 .Select(c => EscapeAccessKey(c.ColumnName))]);
 
             // Set the IsSelected property of the history columns based on whether their ordinals
@@ -302,10 +319,18 @@ namespace HLU.UI.ViewModel
             _sqlPath = Settings.Default.SQLPath;
 
             // Set the user Export options
-            _exportPath = Settings.Default.ExportPath;
+            _defaultExportPath = Settings.Default.DefaultExportPath;
             _maxFeaturesExport = Settings.Default.MaxFeaturesExport;
 
-            // Load the navigation items (the individual options pages).
+            // Set the user Bulk Load options
+            _defaultBulkLoadPath = Settings.Default.DefaultBulkLoadPath;
+            _defaultBulkLoadLayer = Settings.Default.DefaultBulkLoadLayer;
+
+            // Set the application reassign options
+            _reassignRules = new ObservableCollection<ReassignRule>(
+                _addInSettings.ReassignRules ?? []);
+
+            // Load the navigation items
             NavigationItems =
             [
                 new() { Name = "Database", Category = "Application", Content = new AppDatabaseOptions() },
@@ -313,9 +338,11 @@ namespace HLU.UI.ViewModel
                 new () { Name = "Validation", Category = "Application", Content = new AppValidationOptions() },
                 new () { Name = "Updates", Category = "Application", Content = new AppUpdatesOptions() },
                 new () { Name = "Bulk Updates", Category = "Application", Content = new AppBulkUpdateOptions() },
+                new () { Name = "Reassign", Category = "Application", Content = new AppReassignOptions() },
                 new () { Name = "Interface", Category = "User", Content = new UserInterfaceOptions() },
                 new () { Name = "GIS", Category = "User", Content = new UserGISOptions() },
                 new () { Name = "Updates", Category = "User", Content = new UserUpdatesOptions() },
+                new () { Name = "Bulk Load", Category = "User", Content = new UserBulkLoadOptions() },
                 new () { Name = "SQL", Category = "User", Content = new UserSQLOptions() },
                 new () { Name = "History", Category = "User", Content = new UserHistoryOptions() },
                 new () { Name = "Export", Category = "User", Content = new UserExportOptions() }
@@ -464,6 +491,22 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Gets the hyperlink for the application reassign help page, which is constructed from
+        /// the base help URL and the specific help page for the application reassign options.
+        /// </summary>
+        /// <value>The hyperlink for the application reassign help page.</value>
+        public Uri Hyperlink_AppReassignHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.AppReassign), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        /// <summary>
         /// Gets the hyperlink for the application updates help page, which is constructed from
         /// the base help URL and the specific help page for the application updates options.
         /// </summary>
@@ -537,6 +580,22 @@ namespace HLU.UI.ViewModel
             get
             {
                 if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserUpdates), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the hyperlink for the user bulk load help page, which is constructed from
+        /// the base help URL and the specific help page for the user bulk load options.
+        /// </summary>
+        /// <value>The hyperlink for the user bulk load help page.</value>
+        public Uri Hyperlink_UserBulkLoadHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserBulkLoad), UriKind.Absolute, out Uri uri))
                     return uri;
                 else
                     return null;
@@ -755,6 +814,9 @@ namespace HLU.UI.ViewModel
             _addInSettings.BulkUpdateInterpretationQuality = _bulkInterpretationQuality;
             _addInSettings.BulkOSMMSourceId = (int)_bulkOSMMSourceId;
 
+            // Update add-in reassign options
+            _addInSettings.ReassignRules = [.. _reassignRules];
+
             // Save changes back to XML in main window.
             _viewModelMain.SaveAddInSettings(_addInSettings);
         }
@@ -764,28 +826,6 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private void SaveUserSettings()
         {
-            // Update user GIS options
-            var enumValue = AutoZoomToSelectionEnum(_autoZoomToSelection);
-            Settings.Default.AutoZoomToSelection = (int)enumValue;
-            Settings.Default.MinAutoZoom = (int)_minAutoZoom;
-            Settings.Default.DisplayAreaUnits = _displayAreaUnits;
-            Settings.Default.DisplayDistanceUnits = _displayDistanceUnits;
-            Settings.Default.MaxFeaturesGISSelect = (int)_maxFeaturesGISSelect;
-            Settings.Default.WorkingFileGDBPath = _workingFileGDBPath;
-
-            // Update which history columns to display in the history tab.
-            Settings.Default.HistoryColumnOrdinals =
-            [
-                .. _historyColumns.Where(c => c.IsSelected)
-                    .Select(c => _incidMMPolygonsTable.Columns[UnescapeAccessKey(c.Item)].Ordinal.ToString()).ToArray(),
-            ];
-
-            // Update the history display last number of records option.
-            Settings.Default.HistoryDisplayLastN = (int)_historyDisplayLastN;
-
-            // Update the history display geometry option.
-            Settings.Default.HistoryDisplayGeometry = _historyDisplayGeometry;
-
             // Update user interface options
             Settings.Default.ShowGroupHeaders = _showGroupHeaders;
             Settings.Default.ShowIHSTab = _showIHSTab;
@@ -799,6 +839,15 @@ namespace HLU.UI.ViewModel
             Settings.Default.MessageAutoDismissInfo = (int)_messageAutoDismissInfo;
             Settings.Default.MessageAutoDismissSuccess = (int)_messageAutoDismissSuccess;
 
+            // Update user GIS options
+            var enumValue = AutoZoomToSelectionEnum(_autoZoomToSelection);
+            Settings.Default.AutoZoomToSelection = (int)enumValue;
+            Settings.Default.MinAutoZoom = (int)_minAutoZoom;
+            Settings.Default.DisplayAreaUnits = _displayAreaUnits;
+            Settings.Default.DisplayDistanceUnits = _displayDistanceUnits;
+            Settings.Default.GdbJoinThreshold = (int)_gdbJoinThreshold;
+            Settings.Default.WorkingFileGDBPath = _workingFileGDBPath;
+
             // Update user update options
             Settings.Default.DefaultReason = _defaultReason;
             Settings.Default.DefaultProcess = _defaultProcess;
@@ -807,13 +856,28 @@ namespace HLU.UI.ViewModel
             Settings.Default.SecondaryCodeOrder = _secondaryCodeOrder;
             Settings.Default.NotifyOnSplitMerge = _notifyOnSplitMerge;
 
+            // Update user bulk load options
+            Settings.Default.DefaultBulkLoadPath = _defaultBulkLoadPath;
+            Settings.Default.DefaultBulkLoadLayer = _defaultBulkLoadLayer;
+
             // Update user SQL options
             Settings.Default.GetValueRows = (int)_getValueRows;
             Settings.Default.SQLPath = _sqlPath;
 
             // Update user export options
-            Settings.Default.ExportPath = _exportPath;
+            Settings.Default.DefaultExportPath = _defaultExportPath;
             Settings.Default.MaxFeaturesExport = (int)_maxFeaturesExport;
+
+            // Update which history columns to display in the history tab.
+            Settings.Default.HistoryColumnOrdinals =
+            [
+                .. _historyColumns.Where(c => c.IsSelected)
+                    .Select(c => _incidMMPolygonsTable.Columns[UnescapeAccessKey(c.Item)].Ordinal.ToString()).ToArray(),
+            ];
+
+            // Update the history option.
+            Settings.Default.HistoryDisplayLastN = (int)_historyDisplayLastN;
+            Settings.Default.HistoryDisplayGeometry = _historyDisplayGeometry;
 
             // Save changes to the settings.
             Settings.Default.Save();
@@ -1593,6 +1657,23 @@ namespace HLU.UI.ViewModel
 
         #endregion Application Updates
 
+        #region Application Reassign
+
+        /// <summary>
+        /// Gets the collection of reassign rules configured by the user.
+        /// Changes to the collection (add/remove/edit) are reflected immediately via
+        /// <see cref="ObservableCollection{T}"/>.
+        /// </summary>
+        public ObservableCollection<ReassignRule> ReassignRules
+        {
+            get
+            {
+                return _reassignRules;
+            }
+        }
+
+        #endregion Application Reassign
+
         #region User Interface
 
         /// <summary>
@@ -1861,8 +1942,8 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Allow <None> as a valid selection.
-                if (_defaultHabitatClass == "<None>")
-                    return "<None>";
+                if (_defaultHabitatClass == _codeNone)
+                    return _defaultHabitatClass;
 
                 var q = HabitatClassCodes.Where(h => h.code == _defaultHabitatClass);
                 if (q.Any())
@@ -2138,22 +2219,30 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the maximum number of features at which to warn the user before selecting.
+        /// Gets or sets the INCID count threshold above which the GDB temp-table attribute-join
+        /// strategy is used instead of chunked SQL IN-clauses when selecting features on the map.
+        /// Must be within the range [<c>GdbJoinThresholdMin</c>, <c>GdbJoinThresholdMax</c>].
         /// </summary>
-        /// <value>The maximum number of features at which to warn the user before selecting.</value>
-        public int? MaxFeaturesGISSelect
+        public int? GdbJoinThreshold
         {
-            get
-            {
-                return _maxFeaturesGISSelect;
-            }
+            get => _gdbJoinThreshold;
             set
             {
-                _maxFeaturesGISSelect = value;
-                OnPropertyChanged(nameof(MaxFeaturesGISSelect));
+                _gdbJoinThreshold = value;
+                OnPropertyChanged(nameof(GdbJoinThreshold));
                 NotifyNavigationItemErrorsChanged();
             }
         }
+
+        /// <summary>
+        /// Gets the minimum allowed value for <see cref="GdbJoinThreshold"/>.
+        /// </summary>
+        public int GdbJoinThresholdMin => Settings.Default.GdbJoinThresholdMin;
+
+        /// <summary>
+        /// Gets the maximum allowed value for <see cref="GdbJoinThreshold"/>.
+        /// </summary>
+        public int GdbJoinThresholdMax => Settings.Default.GdbJoinThresholdMax;
 
         /// <summary>
         /// Get the working File GDB path command.
@@ -2543,38 +2632,38 @@ namespace HLU.UI.ViewModel
         #region User Export
 
         /// <summary>
-        /// Get the browse export path command.
+        /// Get the browse default export path command.
         /// </summary>
         /// <value>
-        /// The browse export path command.
+        /// The browse default export path command.
         /// </value>
-        public ICommand BrowseExportPathCommand
+        public ICommand BrowseDefaultExportPathCommand
         {
             get
             {
-                if (_browseExportPathCommand == null)
+                if (_browseDefaultExportPathCommand == null)
                 {
-                    Action<object> browseExportPathAction = new(this.BrowseExportPathClicked);
-                    _browseExportPathCommand = new RelayCommand(browseExportPathAction);
+                    Action<object> browseDefaultExportPathAction = new(this.BrowseDefaultExportPathClicked);
+                    _browseDefaultExportPathCommand = new RelayCommand(browseDefaultExportPathAction);
                 }
 
-                return _browseExportPathCommand;
+                return _browseDefaultExportPathCommand;
             }
         }
 
         /// <summary>
-        /// Action when the browse export path button is clicked.
+        /// Action when the browse default export path button is clicked.
         /// </summary>
         /// <param name="param">The parameter passed to the command.</param>
-        private void BrowseExportPathClicked(object param)
+        private void BrowseDefaultExportPathClicked(object param)
         {
-            _bakExportPath = _exportPath;
-            ExportPath = String.Empty;
-            ExportPath = GetExportPath();
+            _bakDefaultExportPath = _defaultExportPath;
+            DefaultExportPath = String.Empty;
+            DefaultExportPath = GetExportPath();
 
-            if (String.IsNullOrEmpty(ExportPath))
+            if (String.IsNullOrEmpty(DefaultExportPath))
             {
-                ExportPath = _bakExportPath;
+                DefaultExportPath = _bakDefaultExportPath;
             }
         }
 
@@ -2584,16 +2673,16 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The export path.
         /// </value>
-        public string ExportPath
+        public string DefaultExportPath
         {
             get
             {
-                return _exportPath;
+                return _defaultExportPath;
             }
             set
             {
-                _exportPath = value;
-                OnPropertyChanged(nameof(ExportPath));
+                _defaultExportPath = value;
+                OnPropertyChanged(nameof(DefaultExportPath));
                 NotifyNavigationItemErrorsChanged();
             }
         }
@@ -2606,7 +2695,7 @@ namespace HLU.UI.ViewModel
         {
             try
             {
-                string exportPath = Settings.Default.ExportPath;
+                string exportPath = Settings.Default.DefaultExportPath;
                 FolderBrowserDialog openFolderDlg = new()
                 {
                     Description = "Select Export Default Path",
@@ -2648,6 +2737,113 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion User Export
+
+        #region User Bulk Load
+
+        /// <summary>
+        /// Get the browse default bulk load path command.
+        /// </summary>
+        /// <value>
+        /// The browse default bulk load path command.
+        /// </value>
+        public ICommand BrowseDefaultBulkLoadPathCommand
+        {
+            get
+            {
+                if (_browseDefaultBulkLoadPathCommand == null)
+                {
+                    Action<object> browseDefaultBulkLoadPathAction = new(this.BrowseDefaultBulkLoadPathClicked);
+                    _browseDefaultBulkLoadPathCommand = new RelayCommand(browseDefaultBulkLoadPathAction);
+                }
+
+                return _browseDefaultBulkLoadPathCommand;
+            }
+        }
+
+        /// <summary>
+        /// Action when the browse default bulk load path button is clicked.
+        /// </summary>
+        /// <param name="param">The parameter passed to the command.</param>
+        private void BrowseDefaultBulkLoadPathClicked(object param)
+        {
+            _bakDefaultBulkLoadPath = _defaultBulkLoadPath;
+            DefaultBulkLoadPath = String.Empty;
+            DefaultBulkLoadPath = GetBulkLoadPath();
+
+            if (String.IsNullOrEmpty(DefaultBulkLoadPath))
+            {
+                DefaultBulkLoadPath = _bakDefaultBulkLoadPath;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default bulk load path.
+        /// </summary>
+        /// <value>
+        /// The bulk load path.
+        /// </value>
+        public string DefaultBulkLoadPath
+        {
+            get
+            {
+                return _defaultBulkLoadPath;
+            }
+            set
+            {
+                _defaultBulkLoadPath = value;
+                OnPropertyChanged(nameof(DefaultBulkLoadPath));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Prompt the user to set the default bulk load path.
+        /// </summary>
+        /// <returns>The selected bulk load path, or null if no path was selected.</returns>
+        public static string GetBulkLoadPath()
+        {
+            try
+            {
+                string bulkLoadPath = Settings.Default.DefaultBulkLoadPath;
+                FolderBrowserDialog openFolderDlg = new()
+                {
+                    Description = "Select Bulk Load Default Path",
+                    UseDescriptionForTitle = true,
+                    SelectedPath = bulkLoadPath,
+                    ShowNewFolderButton = true
+                };
+                if (openFolderDlg.ShowDialog() == DialogResult.OK)
+                {
+                    if (Directory.Exists(openFolderDlg.SelectedPath))
+                        return openFolderDlg.SelectedPath;
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets or sets the default bulk load layer name.
+        /// </summary>
+        /// <value>
+        /// The default bulk load layer name.
+        /// </value>
+        public string DefaultBulkLoadLayer
+        {
+            get
+            {
+                return _defaultBulkLoadLayer;
+            }
+            set
+            {
+                _defaultBulkLoadLayer = value;
+                OnPropertyChanged(nameof(DefaultBulkLoadLayer));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        #endregion User Bulk Load
 
         #region Error Handling
 
@@ -2772,10 +2968,12 @@ namespace HLU.UI.ViewModel
                     => "Error: Select the distance units to use for display.",
                 "DisplayDistanceUnits" when !DisplayDistanceUnitOptions.Contains(DisplayDistanceUnits)
                     => "Error: Select a valid distance unit.",
-                "MaxFeaturesGISSelect" when (Convert.ToInt32(MaxFeaturesGISSelect) < 0 || MaxFeaturesGISSelect == null)
-                    => "Error: Maximum features expected before warning on select must be zero or greater.",
-                "MaxFeaturesGISSelect" when Convert.ToInt32(MaxFeaturesGISSelect) > 100000
-                    => "Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning",
+                "GdbJoinThreshold" when GdbJoinThreshold == null
+                    => "Error: Enter the INCID count threshold for switching to the GDB join selection strategy.",
+                "GdbJoinThreshold" when Convert.ToInt32(GdbJoinThreshold) < Settings.Default.GdbJoinThresholdMin
+                    => $"Error: Threshold must be at least {Settings.Default.GdbJoinThresholdMin:N0}.",
+                "GdbJoinThreshold" when Convert.ToInt32(GdbJoinThreshold) > Settings.Default.GdbJoinThresholdMax
+                    => $"Error: Threshold must not be greater than {Settings.Default.GdbJoinThresholdMax:N0}.",
                 "WorkingFileGDBPath" when String.IsNullOrEmpty(WorkingFileGDBPath)
                     => "Error: You must enter a working File Geodatabase path.",
                 "WorkingFileGDBPath" when WorkingFileGDBPath.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase)
@@ -2799,8 +2997,16 @@ namespace HLU.UI.ViewModel
                 "HistoryDisplayLastN" when (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
                     => "Error: Number of history rows to be displayed must be greater than 0.",
 
+                // Application - Reassign options
+                "ReassignRules" when _reassignRules != null && _reassignRules.Any(r => string.IsNullOrWhiteSpace(r.RuleName))
+                    => "Error: Every reassign rule must have a name.",
+                "ReassignRules" when _reassignRules != null && _reassignRules.Any(r => string.IsNullOrWhiteSpace(r.WhereClause))
+                    => "Error: Every reassign rule must have a SQL WHERE clause.",
+                "ReassignRules" when _reassignRules != null && _reassignRules.GroupBy(r => r.RuleName.Trim(), StringComparer.OrdinalIgnoreCase).Any(g => g.Count() > 1)
+                    => "Error: Reassign rule names must be unique.",
+
                 // User - Export options
-                "ExportPath" when String.IsNullOrEmpty(ExportPath)
+                "DefaultExportPath" when String.IsNullOrEmpty(DefaultExportPath)
                     => "Error: You must enter a default export path.",
 
                 "MaxFeaturesExport" when MaxFeaturesExport == null
@@ -2809,6 +3015,12 @@ namespace HLU.UI.ViewModel
                     => "Error: Maximum features for export warning must be 0 (disabled) or greater.",
                 "MaxFeaturesExport" when MaxFeaturesExport > 1000000
                     => "Error: Maximum features for export warning must not exceed 1,000,000.",
+
+                // User - Bulk Load options
+                "DefaultBulkLoadPath" when String.IsNullOrEmpty(DefaultBulkLoadPath)
+                    => "Error: You must enter a default bulk load path.",
+                "DefaultBulkLoadLayer" when String.IsNullOrEmpty(DefaultBulkLoadLayer)
+                    => "Error: You must enter a default bulk load layer name.",
 
                 _ => null
             };
@@ -2854,12 +3066,14 @@ namespace HLU.UI.ViewModel
                 ("Application", "Validation") => ["HabitatSecondaryCodeValidation", "PrimarySecondaryCodeValidation", "QualityValidation", "PotentialPriorityDetermQtyValidation"],
                 ("Application", "Updates") => ["SubsetUpdateAction", "ClearIHSUpdateAction", "SecondaryCodeDelimiter"],
                 ("Application", "Bulk Updates") => ["BulkDeterminationQuality", "BulkInterpretationQuality", "OSMMSourceId"],
+                ("Application", "Reassign") => ["ReassignRules"],
                 ("User", "Interface") => ["ShowOSMMUpdatesOption", "MessageAutoDismissError", "MessageAutoDismissWarning", "MessageAutoDismissInfo", "MessageAutoDismissSuccess"],
-                ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "DisplayAreaUnits", "DisplayDistanceUnits", "MaxFeaturesGISSelect", "WorkingFileGDBPath"],
+                ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "DisplayAreaUnits", "DisplayDistanceUnits", "GdbJoinThreshold", "WorkingFileGDBPath"],
                 ("User", "Updates") => ["DefaultReason", "DefaultProcess", "DefaultHabitatClass", "DefaultSecondaryGroup", "SecondaryCodeOrder", "NotifyOnSplitMerge"],
+                ("User", "Bulk Load") => ["DefaultBulkLoadPath", "DefaultBulkLoadLayer"],
                 ("User", "SQL") => ["GetValueRows", "SQLPath"],
                 ("User", "History") => ["HistoryColumns", "HistoryDisplayGeometry", "HistoryDisplayLastN"],
-                ("User", "Export") => ["ExportPath", "MaxFeaturesExport"],
+                ("User", "Export") => ["DefaultExportPath", "MaxFeaturesExport"],
                 _ => []
             };
         }

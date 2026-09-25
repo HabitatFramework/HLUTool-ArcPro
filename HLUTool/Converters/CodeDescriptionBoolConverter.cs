@@ -33,7 +33,7 @@ namespace HLU.Converters
     /// </summary>
     internal class CodeDescriptionBoolConverter : IValueConverter
     {
-        private string _codeDeleteRow = Settings.Default.CodeDeleteRow;
+        private string _codeDeleteRow = Settings.Default.CodeClear;
         internal static readonly string[] _separator = [" : "];
 
         #region IValueConverter Members

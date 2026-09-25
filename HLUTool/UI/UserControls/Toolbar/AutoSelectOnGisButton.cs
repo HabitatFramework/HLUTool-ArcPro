@@ -96,8 +96,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on the main window visibility.
-            bool isEnabled = _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = isEnabled;
+            Enabled = _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when the main window is not visible.";

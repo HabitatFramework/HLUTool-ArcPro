@@ -66,7 +66,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error setting OSMM Review Mode: {ex}");
+                System.Diagnostics.Debug.WriteLine($"Error Starting OSMM Review Mode: {ex}");
             }
         }
 
@@ -98,7 +98,11 @@ namespace HLU.UI.UserControls.Toolbar
             Enabled = _viewModel.CanOSMMReviewMode;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 No OSMM updates are pending\n\u2022 The user is not authorised\n\u2022 Bulk Update mode is active\n\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 No OSMM updates are pending for the active layer geometry type\n" +
+                "\u2022 The user is not authorised\n" +
+                "\u2022 Bulk Update mode is active\n" +
+                "\u2022 The main window is not visible";
         }
 
         #endregion Overrides

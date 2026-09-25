@@ -21,6 +21,7 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using HLU.Data;
@@ -79,6 +80,8 @@ namespace HLU.UI.ViewModel
         private List<int> _sourceDateEndOrdinals = [];
         private List<int> _sourceDateTypeOrdinals = [];
         private int _attributesLength;
+        private string _codeNone = Settings.Default.CodeNone;
+        private string _codeGIS = Settings.Default.CodeGIS;
 
         /// <summary>
         /// Cache for vague date calculations to improve performance by avoiding redundant calculations for the same condition/source IDs.
@@ -153,12 +156,18 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
+            // Get the GIS layer selection again (just in case), so that the
+            // export dialog and subsequent export both use a consistent, up-to-date
+            // selection cache (matching the pattern used by ReassignFeaturesAsync
+            // and PhysicalMergeAsync).
+            await _viewModelMain.GetMapSelectionAsync(false);
+
             // Count features for the dialog display.
-            int fragCount = await _viewModelMain.GISApplication.CountMapSelectionAsync();
+            int fragCount = _viewModelMain.GisSelection == null ? 0 : _viewModelMain.GisSelection.Rows.Count;
             long totalCount = await _viewModelMain.GISApplication.CountMapFeaturesAsync();
 
             _viewModelExport = new(
-                _viewModelMain.GisSelection == null ? 0 : fragCount,
+                fragCount,
                 totalCount,
                 _viewModelMain.GISApplication.HluLayerName,
                 _viewModelMain.HluDataset.exports)
@@ -188,13 +197,13 @@ namespace HLU.UI.ViewModel
         private async void ViewModelExport_RequestClose(
             int exportID,
             bool selectedOnly,
-            ViewModelWindowExport.ExportOutputType outputType)
+            OutputType outputType)
         {
             _viewModelExport.RequestClose -= ViewModelExport_RequestClose;
             _windowExport.Close();
 
             // Get the default export path.
-            string exportPath = Settings.Default.ExportPath;
+            string exportPath = Settings.Default.DefaultExportPath;
 
             // If not cancelled, proceed with the export using the selected format and options.
             if (exportID != -1)
@@ -224,7 +233,7 @@ namespace HLU.UI.ViewModel
             int userExportId,
             string exportPath,
             bool selectedOnly,
-            ViewModelWindowExport.ExportOutputType outputType)
+            OutputType outputType)
         {
             bool exportSuccess = false;
 
@@ -249,15 +258,11 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            // If exporting only selected features, always synchronise the internal
-            // selection cache with the live GIS selection. The user may have selected
-            // features directly in GIS without clicking 'Get Map Selection', leaving
-            // _gisSelection stale, null, or pointing to a different set of features.
+            // If exporting only selected features, check the selection cache
+            // (synchronised with the live GIS selection in InitiateExport) is
+            // still usable.
             if (selectedOnly)
             {
-                await _viewModelMain.GetMapSelectionAsync(false);
-
-                // Abort if the sync produced no usable selection.
                 if (_viewModelMain.GisSelection == null ||
                     _viewModelMain.GisSelection.Rows.Count == 0)
                 {
@@ -290,7 +295,7 @@ namespace HLU.UI.ViewModel
             // correct dialog is shown immediately.
             var exportDetails = await _viewModelMain.GISApplication.ExportPromptAsync(
                 exportPath,
-                outputType == ViewModelWindowExport.ExportOutputType.FileGeodatabase);
+                outputType == OutputType.FileGeodatabase);
 
             // If the user didn't provide export details then exit.
             if (exportDetails == default)
@@ -305,9 +310,24 @@ namespace HLU.UI.ViewModel
             string exportWorkspace = exportDetails.outputWorkspace;
             string exportFeatureClassName = exportDetails.outputFeatureClassName;
 
+            // Halt the export if the requested output matches the active HLU layer,
+            // as it cannot (and must not) be overwritten.
+            bool isActiveLayer = await _viewModelMain.GISApplication.IsActiveHluLayerPathAsync(
+                exportWorkspace, exportFeatureClassName);
+            if (isActiveLayer)
+            {
+                MessageBox.Show(
+                    $"Cannot export: the requested output layer '{exportFeatureClassName}' is the active HLU layer.\n\n" +
+                    "Please choose a different output path or feature class name, or change the active HLU layer.",
+                    "HLU: Export",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation);
+                return;
+            }
+
             // Discard any pending edits left by geoprocessing tools to release
             // geodatabase schema locks before creating new tables.
-            await ArcGIS.Desktop.Core.Project.Current.DiscardEditsAsync();
+            await Project.Current.DiscardEditsAsync();
 
             // Clean up all tables and feature classes before starting
             await ArcGISProHelpers.CleanupGeodatabaseAsync(workingFileGDBpath);
@@ -566,7 +586,7 @@ namespace HLU.UI.ViewModel
                 // Use ColumnName (source name in the GIS layer), not FieldName (export name)
                 List<string> gisFieldsToInclude = [.. exportFields
                     .Where(f => f.TableName != null &&
-                        f.TableName.Equals("<gis>", StringComparison.OrdinalIgnoreCase))
+                        f.TableName.Equals(_codeGIS, StringComparison.OrdinalIgnoreCase))
                     .Select(f => f.ColumnName)  // Use ColumnName here
                     .Distinct()];
 
@@ -622,7 +642,7 @@ namespace HLU.UI.ViewModel
             {
                 // Discard any pending edits before schema cleanup to release
                 // any geodatabase schema locks left by geoprocessing tools.
-                await ArcGIS.Desktop.Core.Project.Current.DiscardEditsAsync();
+                await Project.Current.DiscardEditsAsync();
 
                 // Clean up all tables and feature classes after export
                 await ArcGISProHelpers.CleanupGeodatabaseAsync(workingFileGDBpath);
@@ -1643,14 +1663,14 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.HluDataset.exports_fields.OrderBy(r => r.field_ordinal))
             {
                 // Handle GIS fields - add to exportFields but don't add to SQL query
-                if (r.table_name.Equals("<gis>", StringComparison.CurrentCultureIgnoreCase))
+                if (r.table_name.Equals(_codeGIS, StringComparison.CurrentCultureIgnoreCase))
                 {
                     AddGisField(r, ref exportFields);
                     continue;
                 }
 
                 // Handle empty fields
-                if (r.table_name.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
+                if (r.table_name.Equals(_codeNone, StringComparison.CurrentCultureIgnoreCase))
                 {
                     AddEmptyField(r, context.SqlFieldOrdinal, ref exportFields);
                     continue;
@@ -1715,7 +1735,7 @@ namespace HLU.UI.ViewModel
             ExportField fld = new()
             {
                 FieldOrdinal = -1,  // Not in SQL query
-                TableName = "<gis>",
+                TableName = _codeGIS,
                 ColumnName = fieldRow.column_name,  // Source field name in GIS layer
                 FieldName = fieldRow.field_name,    // Export field name
                 FieldType = dataType,
@@ -2124,7 +2144,7 @@ namespace HLU.UI.ViewModel
             foreach (ExportField f in exportFields.OrderBy(f => f.FieldOrder))
             {
                 // Skip GIS fields - they'll be added during the GIS export/join process
-                if (f.TableName != null && f.TableName.Equals("<gis>", StringComparison.CurrentCultureIgnoreCase))
+                if (f.TableName != null && f.TableName.Equals(_codeGIS, StringComparison.CurrentCultureIgnoreCase))
                 {
                     continue;
                 }
@@ -2640,11 +2660,11 @@ namespace HLU.UI.ViewModel
                 string columnName = r.column_name;
 
                 // Skip placeholder (empty) fields.
-                if (tableName.Equals("<none>", StringComparison.OrdinalIgnoreCase))
+                if (tableName.Equals(_codeNone, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 // Validate GIS fields against the live layer field list.
-                if (tableName.Equals("<gis>", StringComparison.OrdinalIgnoreCase))
+                if (tableName.Equals(_codeGIS, StringComparison.OrdinalIgnoreCase))
                 {
                     if (!string.IsNullOrEmpty(columnName) && !gisFieldSet.Contains(columnName))
                         errors.Add($"GIS field '{columnName}' (export field '{r.field_name}') does not exist in the active GIS layer.");
@@ -2804,7 +2824,7 @@ namespace HLU.UI.ViewModel
                     ExportField fld = new();
 
                     // Enable new 'empty' fields to be included in exports.
-                    if (tableName.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
+                    if (tableName.Equals(_codeNone, StringComparison.CurrentCultureIgnoreCase))
                         fld.FieldOrdinal = -1;
                     else
                         fld.FieldOrdinal = sqlFieldOrdinal;
@@ -2840,7 +2860,7 @@ namespace HLU.UI.ViewModel
                 ExportField fld = new();
 
                 // Enable new 'empty' fields to be included in exports.
-                if (tableName.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
+                if (tableName.Equals(_codeNone, StringComparison.CurrentCultureIgnoreCase))
                     fld.FieldOrdinal = -1;
                 else
                     fld.FieldOrdinal = sqlFieldOrdinal;

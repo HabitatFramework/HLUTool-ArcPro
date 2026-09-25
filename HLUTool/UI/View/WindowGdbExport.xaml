@@ -24,7 +24,7 @@
         </ResourceDictionary>
     </controls:ProWindow.Resources>
 
-    <DockPanel Margin="12,12,12,8">
+    <DockPanel Margin="8">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

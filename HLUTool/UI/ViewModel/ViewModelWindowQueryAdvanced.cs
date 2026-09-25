@@ -40,7 +40,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains the view model for the Advanced Query Builder window.
     /// </summary>
-    class ViewModelWindowQueryAdvanced : ViewModelBase, IDataErrorInfo
+    internal class ViewModelWindowQueryAdvanced : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -899,7 +899,7 @@ namespace HLU.UI.ViewModel
                         //    lut.AsEnumerable().Where(r => Regex.IsMatch(r[lut.PrimaryKey[0].Ordinal].ToString(), @"\APHAP")) :
                         //    lut.AsEnumerable();
 
-                        // If the select table is the 'incid_bap' table then only
+                        // If the select table is the 'incid_bap' table then only show
                         // bap_priority values from the related lookup table (lut_habitat_type).
                         var q = lut.AsEnumerable();
 
@@ -911,13 +911,29 @@ namespace HLU.UI.ViewModel
                         }
                         else if (lut is HluDataSet.lut_osmm_habitat_xrefDataTable && Table is HluDataSet.incid_osmm_updatesDataTable)
                         {
+                            // habitat_primary and habitat_secondaries can both contain duplicates so
+                            // show the distinct osmm_xref_id values with a combined habitat description.
                             DataColumn habPrimaryColumn = lut.Columns["habitat_primary"];
                             DataColumn habSecondaryColumn = lut.Columns["habitat_secondaries"];
-                            _queryValues = q.OrderBy(r => r[sortOrderColumn]).ToDictionary(r => r[habPrimaryColumn].ToString() + " : " + r[habSecondaryColumn].ToString(), r => r[lutColumn]);
+                            _queryValues = q.OrderBy(r => r[lutColumn]).ToDictionary(
+                                r => r[lutColumn].ToString() + " : " + r[habPrimaryColumn].ToString() +
+                                    (r[habSecondaryColumn] == DBNull.Value || string.IsNullOrEmpty(r[habSecondaryColumn].ToString())
+                                        ? string.Empty
+                                        : " " + r[habSecondaryColumn].ToString()),
+                                r => r[lutColumn]);
+                        }
+                        else if (lut is HluDataSet.lut_secondaryDataTable && Table is HluDataSet.incid_secondaryDataTable)
+                        {
+                            _queryValues = q.OrderBy(r => r[sortOrderColumn]).ToDictionary(r => r[lutColumn].ToString() + ((descriptionColumn != lutColumn &&
+                            r[descriptionColumn].ToString() != r[lutColumn].ToString()) ?
+                                " : " + r[descriptionColumn].ToString() : String.Empty), r => r[lutColumn]);
                         }
                         else
                         {
-                            _queryValues = q.OrderBy(r => r[sortOrderColumn]).ToDictionary(r => r[lutColumn].ToString() + ((descriptionColumn != lutColumn &&
+                            //_queryValues = q.OrderBy(r => r[sortOrderColumn]).ToDictionary(r => r[lutColumn].ToString() + ((descriptionColumn != lutColumn &&
+                            //r[descriptionColumn].ToString() != r[lutColumn].ToString()) ?
+                            //    " : " + r[descriptionColumn].ToString() : String.Empty), r => r[lutColumn]);
+                            _queryValues = q.OrderBy(r => r[lutColumn]).ToDictionary(r => r[lutColumn].ToString() + ((descriptionColumn != lutColumn &&
                             r[descriptionColumn].ToString() != r[lutColumn].ToString()) ?
                                 " : " + r[descriptionColumn].ToString() : String.Empty), r => r[lutColumn]);
                         }

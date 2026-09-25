@@ -23,7 +23,6 @@
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using HLU.Data;
@@ -58,7 +57,7 @@ namespace HLU.UI.ViewModel
     /// Core infrastructure partial for ViewModelWindowMain.
     /// Contains: Fields, Properties, Constructor, Lifecycle management, Shared state.
     /// </summary>
-    partial class ViewModelWindowMain : PanelViewModelBase, IDataErrorInfo
+    internal partial class ViewModelWindowMain : ViewModelPanelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -107,6 +106,7 @@ namespace HLU.UI.ViewModel
 
         // Primary state variables that track what's happening now
         private WorkMode _workMode = WorkMode.None;
+
         private bool _changed = false;
         private bool _readingMap = false;
         private bool _moving = false;
@@ -121,6 +121,7 @@ namespace HLU.UI.ViewModel
 
         // Supporting infrastructure for work mode logic
         private const WorkMode DisallowEditOperationsMask = WorkMode.Bulk | WorkMode.OSMMReview | WorkMode.OSMMBulk;
+
         private bool _isNavigating = false;
 
         #endregion Fields - Work Mode
@@ -143,6 +144,7 @@ namespace HLU.UI.ViewModel
 
         // Export options
         private int _minZoom;
+
         private int _autoZoomToSelection;
         private int _warnBeforeMaxFeatures;
 
@@ -151,10 +153,12 @@ namespace HLU.UI.ViewModel
 
         // History options
         private DataColumn[] _historyColumns;
+
         private int _historyDisplayLastN;
 
         // Interface options
         private bool _showGroupHeaders;
+
         private bool _showIHSTab;
         private bool _showSourceHabitatGroup;
         private bool _showHabitatSecondariesSuggested;
@@ -164,6 +168,7 @@ namespace HLU.UI.ViewModel
 
         // Updates options
         private int _subsetUpdateAction;
+
         private string _clearIHSUpdateAction;
         private string _defaultReason;
         private string _defaultProcess;
@@ -175,6 +180,7 @@ namespace HLU.UI.ViewModel
 
         // Validation options
         private bool _resetOSMMUpdatesStatus;
+
         private int _habitatSecondaryCodeValidation;
         private int _primarySecondaryCodeValidation;
         private int _qualityValidation;
@@ -257,9 +263,13 @@ namespace HLU.UI.ViewModel
 
         #region Fields - Misc State
 
-        private string _codeAnyRow;
         private bool _suppressUserNotifications;
-        private string _codeDeleteRow;
+        private string _codeAny;
+        private string _codeClear;
+        private string _codeNone;
+        private string _codeAll;
+        private string _codeAllEssentials;
+
         private HluDataSet.lut_secondary_groupRow _allRow;
         private HluDataSet.lut_secondary_groupRow _allEssRow;
 
@@ -1493,33 +1503,44 @@ namespace HLU.UI.ViewModel
                         break;
 
                     case "IncidPrimary":
-                        // If the field is in error add the field name to the list of errors
-                        // for the parent tab. Otherwise remove the field from the list.
-                        if (String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode)
                         {
-                            error = "Error: Primary habitat is mandatory for every INCID";
-                            AddToErrorList(_habitatErrors, columnName);
-                            RemoveFromErrorList(_habitatWarnings, columnName);
+                            // Use backing field to avoid triggering the debug-logged getter.
+                            bool hadError = _habitatErrors.Contains(columnName);
+                            bool hadWarning = _habitatWarnings.Contains(columnName);
+
+                            // If the field is in error add the field name to the list of errors
+                            // for the parent tab. Otherwise remove the field from the list.
+                            if (String.IsNullOrEmpty(_incidPrimary) && IsNotBulkMode)
+                            {
+                                error = "Error: Primary habitat is mandatory for every INCID";
+                                AddToErrorList(_habitatErrors, columnName);
+                                RemoveFromErrorList(_habitatWarnings, columnName);
+                            }
+                            else if (!String.IsNullOrEmpty(_incidPrimary) && IsNotBulkMode
+                                && _incidCurrentRow != null
+                                && _primaryCodes != null && _primaryCodes.Count > 0
+                                && !_primaryCodes.Any(p => p.Code == _incidPrimary))
+                            {
+                                // The stored code is not in the current combo box list — this happens
+                                // when lut_primary has been edited since the incid was last updated.
+                                // Treat as a warning (not an error) so the user can still navigate
+                                // and the read-only value in the database is preserved.
+                                error = $"Warning: Primary habitat '{_incidPrimary}' is not valid for the available options";
+                                AddToErrorList(_habitatWarnings, columnName);
+                                RemoveFromErrorList(_habitatErrors, columnName);
+                            }
+                            else
+                            {
+                                RemoveFromErrorList(_habitatErrors, columnName);
+                                RemoveFromErrorList(_habitatWarnings, columnName);
+                            }
+
+                            // Only notify HabitatTabLabel if the error/warning state changed.
+                            bool hasError = _habitatErrors.Contains(columnName);
+                            bool hasWarning = _habitatWarnings.Contains(columnName);
+                            if (hasError != hadError || hasWarning != hadWarning)
+                                OnPropertyChanged(nameof(HabitatTabLabel));
                         }
-                        else if (!String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode
-                            && _incidCurrentRow != null
-                            && _primaryCodes != null && _primaryCodes.Count > 0
-                            && !_primaryCodes.Any(p => p.Code == IncidPrimary))
-                        {
-                            // The stored code is not in the current combo box list — this happens
-                            // when lut_primary has been edited since the incid was last updated.
-                            // Treat as a warning (not an error) so the user can still navigate
-                            // and the read-only value in the database is preserved.
-                            error = $"Warning: Primary habitat '{IncidPrimary}' is not valid for the available options";
-                            AddToErrorList(_habitatWarnings, columnName);
-                            RemoveFromErrorList(_habitatErrors, columnName);
-                        }
-                        else
-                        {
-                            RemoveFromErrorList(_habitatErrors, columnName);
-                            RemoveFromErrorList(_habitatWarnings, columnName);
-                        }
-                        OnPropertyChanged(nameof(HabitatTabLabel));
                         break;
 
                     case "HabitatSecondariesMandatory":
@@ -1841,11 +1862,11 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that completes when initialisation completes.</returns>
         internal Task EnsureInitializedAsync()
         {
-            // If initialisation has already started, always return the same task
+            // If initialisation has already started, always return the same task.
             if (_initializationTask != null)
                 return _initializationTask;
 
-            // Start initialisation once
+            // Start initialisation once.
             _initializationTask = InitializeOnceAsync();
 
             return _initializationTask;
@@ -2121,7 +2142,7 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 HLUTool.WorkingGdbPath = null;
-                System.Diagnostics.Debug.WriteLine($"Failed to create working GDB: {ex.Message}");
+                Debug.WriteLine($"Failed to create working GDB: {ex.Message}");
             }
         }
 
@@ -2132,10 +2153,11 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <returns>A task that completes when the connection is open and validated.</returns>
         /// <exception cref="HLUToolException">Thrown if no connection can be created or the dataset is invalid.</exception>
+        /// <exception cref="UserCancelledException">Thrown if the user cancelled the connection process.</exception>
         private async Task OpenDatabaseConnectionAsync()
         {
             if ((_db = await DbFactory.CreateConnectionAsync(DbConnectionTimeout)) == null)
-                throw new HLUToolException("No database connection.");
+                throw new UserCancelledException();
 
             _hluDS = new HluDataSet();
 
@@ -2174,9 +2196,12 @@ namespace HLU.UI.ViewModel
             ApplyUserSettings();
 
             // Get application settings
-            _codeDeleteRow = Settings.Default.CodeDeleteRow;
+            _codeClear = Settings.Default.CodeClear;
+            _codeAny = Settings.Default.CodeAny;
+            _codeAll = Settings.Default.CodeAll;
+            _codeAllEssentials = Settings.Default.CodeAllEssentials;
+            _codeNone = Settings.Default.CodeNone;
             _autoSelectOnGis = Settings.Default.AutoSelectOnGis;
-            _codeAnyRow = Settings.Default.CodeAnyRow;
 
             // Initialise statics.
             HistoryGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
@@ -2197,8 +2222,8 @@ namespace HLU.UI.ViewModel
                 _childRowFilterDict = BuildChildRowFilters();
                 _childRowOrderByDict = BuildChildRowOrderByClauses();
 
-                // Fill lookup tables (at least lut_site_id must be filled at this point)
-                _hluTableAdapterMgr.Fill(_hluDS, TableAdapterManager.Scope.Lookup, false);
+                // Fill lookup tables one at a time so that any ConstraintException identifies the offending table.
+                _hluTableAdapterMgr.FillLookupTablesWithDiagnostics(_hluDS);
 
                 // Load all of the lookup tables
                 LoadLookupTables();
@@ -2218,9 +2243,9 @@ namespace HLU.UI.ViewModel
                 if (_allRow == null)
                 {
                     _allRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
-                    _allRow.code = "<All>";
+                    _allRow.code = _codeAll;
                     _allRow.is_local = true;
-                    _allRow.description = "<All>";
+                    _allRow.description = _codeAll;
                     _allRow.sort_order = -1;
                 }
 
@@ -2228,9 +2253,9 @@ namespace HLU.UI.ViewModel
                 if (_allEssRow == null)
                 {
                     _allEssRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
-                    _allEssRow.code = "<All Essentials>";
+                    _allEssRow.code = _codeAllEssentials;
                     _allEssRow.is_local = true;
-                    _allEssRow.description = "<All Essentials>";
+                    _allEssRow.description = _codeAllEssentials;
                     _allEssRow.sort_order = -1;
                 }
 
@@ -2238,8 +2263,8 @@ namespace HLU.UI.ViewModel
                 if (_noneReasonRow == null)
                 {
                     _noneReasonRow = HluDataset.lut_reason.Newlut_reasonRow();
-                    _noneReasonRow.code = "<None>";
-                    _noneReasonRow.description = "<None>";
+                    _noneReasonRow.code = _codeNone;
+                    _noneReasonRow.description = _codeNone;
                     _noneReasonRow.sort_order = -1;
                 }
 
@@ -2247,8 +2272,8 @@ namespace HLU.UI.ViewModel
                 if (_noneProcessRow == null)
                 {
                     _noneProcessRow = HluDataset.lut_process.Newlut_processRow();
-                    _noneProcessRow.code = "<None>";
-                    _noneProcessRow.description = "<None>";
+                    _noneProcessRow.code = _codeNone;
+                    _noneProcessRow.description = _codeNone;
                     _noneProcessRow.sort_order = -1;
                 }
 
@@ -2256,13 +2281,15 @@ namespace HLU.UI.ViewModel
                 if (_noneHabitatClassRow == null)
                 {
                     _noneHabitatClassRow = HluDataset.lut_habitat_class.Newlut_habitat_classRow();
-                    _noneHabitatClassRow.code = "<None>";
-                    _noneHabitatClassRow.description = "<None>";
+                    _noneHabitatClassRow.code = _codeNone;
+                    _noneHabitatClassRow.description = _codeNone;
                     _noneHabitatClassRow.sort_order = -1;
                 }
 
-                // Wire up event handler for copy switches
-                _copySwitches.PropertyChanged += new PropertyChangedEventHandler(CopySwitches_PropertyChanged);
+                // Wire up event handler for copy switches (unsubscribe first to prevent duplicate
+                // handlers accumulating across Reload cycles, since _copySwitches is never reset).
+                _copySwitches.PropertyChanged -= CopySwitches_PropertyChanged;
+                _copySwitches.PropertyChanged += CopySwitches_PropertyChanged;
 
                 int result;
                 // Columns that identify map features and are returned by GIS
@@ -2275,16 +2302,13 @@ namespace HLU.UI.ViewModel
                 // Columns to be saved in the history table when records are updated.
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
 
-                // Check for any pending OSMM updates.
-                await CheckAnyOSMMUpdatesAsync();
-
                 // Check the active map is valid — this sets _gisLayerType (and thus
                 // RecordIds.SiteID) to reflect the actual active layer geometry before
                 // the initial row count is performed.
                 if (await CheckActiveMapAsync())
                 {
-                    // Count rows of incid table now that _gisLayerType is correct.
-                    IncidRowCount(true);
+                    // Check for any pending OSMM updates after geometry type is set.
+                    await CheckAnyOSMMUpdatesAsync();
 
                     // If it is valid move to first row
                     await MoveIncidCurrentRowIndexAsync(1);
@@ -2300,7 +2324,7 @@ namespace HLU.UI.ViewModel
                 BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
 
                 // Set default reason and process from settings and update toolbar combo boxes
-                if (!string.IsNullOrWhiteSpace(_defaultReason) && _defaultReason != "<None>")
+                if (!string.IsNullOrWhiteSpace(_defaultReason) && _defaultReason != _codeNone)
                 {
                     // _defaultReason stores the code; resolve to description for the VM.
                     var reasonRow = _lutReason?.FirstOrDefault(r =>
@@ -2309,7 +2333,7 @@ namespace HLU.UI.ViewModel
                         Reason = reasonRow.description;
                 }
 
-                if (!string.IsNullOrWhiteSpace(_defaultProcess) && _defaultProcess != "<None>")
+                if (!string.IsNullOrWhiteSpace(_defaultProcess) && _defaultProcess != _codeNone)
                 {
                     // _defaultProcess stores the code; resolve to description for the VM.
                     var processRow = _lutProcess?.FirstOrDefault(r =>
@@ -2335,7 +2359,7 @@ namespace HLU.UI.ViewModel
             {
                 Debug.WriteLine($"InitializeToolPaneAsync error: {ex.Message}");
                 ShowError(ex.Message, MessageCategory.GIS);
-        }
+            }
 
             return false;
         }
@@ -2347,6 +2371,12 @@ namespace HLU.UI.ViewModel
         /// <returns>Returns a task that resolves to true if there is a valid active map; false otherwise.</returns>
         internal async Task<bool> CheckActiveMapAsync(bool forceReset = false)
         {
+            // Don't check the active map if required dependencies are not yet initialized.
+            // Check individual dependencies rather than _initialised flag to allow
+            // this method to work during initial startup when called from InitializeToolPaneAsync.
+            if (_hluDS == null || _db == null || _recIDs == null)
+                return false;
+
             // Check the GIS map
             ChangeCursor(Cursors.Wait, "Checking GIS map ...");
 
@@ -2366,7 +2396,11 @@ namespace HLU.UI.ViewModel
             if (needsNewGisApp || mapChanged)
             {
                 // Create a new GIS functions instance
-                _gisApp = new();
+                _gisApp = new()
+                {
+                    // Apply the current join threshold to the new instance.
+                    GdbJoinThreshold = _warnBeforeMaxFeatures
+                };
 
                 // If map changed, update the cached view
                 if (mapChanged)
@@ -3176,7 +3210,7 @@ namespace HLU.UI.ViewModel
         internal static Task ShowDockPane()
         {
             // Get the dockpane DAML id.
-            DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
             if (pane == null)
                 return Task.CompletedTask;
 
@@ -3280,6 +3314,262 @@ namespace HLU.UI.ViewModel
                 if (!InError && _initialised)
                     GridMainVisibility = Visibility.Visible;
             }
+            else
+            {
+                // Dockpane is being hidden (user switched to another pane or minimized)
+                // Note: We don't unload here because OnShow(false) is called when switching between panes.
+                // Unloading only happens in OnDispose() when ArcGIS Pro closes or via explicit UnloadApplication() call.
+
+                // Just toggle the tab state to hidden
+                ToggleState("HLUTool_tab_state", false);
+            }
+        }
+
+        /// <summary>
+        /// Unsubscribes from all event handlers to prevent memory leaks and unwanted behavior.
+        /// </summary>
+        private void UnsubscribeFromEvents()
+        {
+            try
+            {
+                // Unsubscribe from map events
+                if (_mapEventsSubscribed)
+                {
+                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
+                    _mapEventsSubscribed = false;
+                }
+
+                // Unsubscribe from map member events
+                if (_mapMemberEventsSubscribed)
+                {
+                    MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
+                    _mapMemberEventsSubscribed = false;
+                }
+
+                // Unsubscribe from project closed events
+                if (_projectClosedEventsSubscribed)
+                {
+                    ProjectClosedEvent.Unsubscribe(OnProjectClosed);
+                    _projectClosedEventsSubscribed = false;
+                }
+
+                // Unsubscribe from layers changed events
+                if (_layersChangedEventsSubscribed)
+                {
+                    LayersAddedEvent.Unsubscribe(OnLayersAdded);
+                    LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
+                    _layersChangedEventsSubscribed = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - we're cleaning up
+                WriteInitLog($"UnsubscribeFromEvents ERROR: {ex.Message}");
+                Debug.WriteLine($"Error during UnsubscribeFromEvents: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// Completely unloads the application state, unsubscribes from events, and cleans up resources.
+        /// Called from OnDispose() when ArcGIS Pro closes the pane.
+        /// </summary>
+        private void UnloadApplication()
+        {
+            try
+            {
+                WriteInitLog("UnloadApplication STARTED");
+
+                // Hide the UI immediately
+                GridMainVisibility = Visibility.Hidden;
+
+                // Toggle the tab state to hidden
+                ToggleState("HLUTool_tab_state", false);
+
+                // Unsubscribe from all events
+                UnsubscribeFromEvents();
+
+                // Clear the GIS application reference
+                if (_gisApp != null)
+                {
+                    _gisApp = null;
+                }
+
+                // Clear the active map view reference
+                _activeMapView = null;
+                _activeLayerName = null;
+
+                // Close database connection if open
+                if (_db != null)
+                {
+                    try
+                    {
+                        _db.Connection?.Close();
+                        _db.Connection?.Dispose();
+                    }
+                    catch
+                    {
+                        // Ignore errors during cleanup
+                    }
+                    _db = null;
+                }
+
+                // Clear the dataset
+                if (_hluDS != null)
+                {
+                    _hluDS.Clear();
+                    _hluDS.Dispose();
+                    _hluDS = null;
+                }
+
+                // Clear the table adapter manager
+                _hluTableAdapterMgr = null;
+
+                // Reset initialization flags
+                _initialised = false;
+                _inError = false;
+                _initializationTask = null;
+                _initializationException = null;
+
+                // Reset work mode
+                _workMode = WorkMode.None;
+
+                // Clear selection state
+                _incidsSelectedMap = null;
+                _toidsSelectedMap = null;
+                _fragsSelectedMap = null;
+                _selectedIncidsInGISCount = 0;
+                _selectedToidsInGISCount = 0;
+                _selectedFragsInGISCount = 0;
+                _selectedFeaturesInGISCount = 0;
+                _selectedIncidsInDBCount = 0;
+                _selectedFragsInDBCount = 0;
+                _currentIncidToidsInGISCount = 0;
+                _currentIncidFragsInGISCount = 0;
+                _currentIncidToidsInDBCount = 0;
+                _currentIncidFragsInDBCount = 0;
+
+                // Clear filter state
+                _gisSelection = null;
+                _incidSelection = null;
+                _incidMMShadowSelection = null;
+                _incidSelectionWhereClause = null;
+                _filteredByMap = false;
+
+                // Clear current record state
+                _incidCurrentRow = null;
+                _incidCurrentRowClone = null;
+                _incidCurrentRowIndex = 0;
+                _incidRowCount = 0;
+
+                // Clear OSMM state
+                _incidOSMMUpdatesOSMMXref = 0;
+                _incidOSMMUpdatesProcessFlag = 0;
+                _incidOSMMUpdatesSpatialFlag = null;
+                _incidOSMMUpdatesChangeFlag = null;
+                _incidOSMMUpdatesStatus = null;
+
+                // Clear child rows
+                _incidIhsMatrixRows = null;
+                _incidIhsFormationRows = null;
+                _incidIhsManagementRows = null;
+                _incidIhsComplexRows = null;
+                _incidBapRows = null;
+                _incidSourcesRows = null;
+                _incidOSMMUpdatesRows = null;
+                _incidHistoryRows = null;
+                _incidConditionRows = null;
+                _incidSecondaryRows = null;
+
+                // Detach CollectionChanged handlers from observable collections before clearing them.
+                if (_incidSecondaryHabitats != null)
+                {
+                    _incidSecondaryHabitats.CollectionChanged -= IncidSecondaryHabitats_CollectionChanged;
+                    _incidSecondaryHabitats = null;
+                }
+
+                if (_incidBapRowsAuto != null)
+                {
+                    _incidBapRowsAuto.CollectionChanged -= IncidBapRowsAuto_CollectionChanged;
+                    foreach (BapEnvironment be in _incidBapRowsAuto)
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
+                    _incidBapRowsAuto = null;
+                }
+
+                if (_incidBapRowsUser != null)
+                {
+                    _incidBapRowsUser.CollectionChanged -= IncidBapRowsUser_CollectionChanged;
+                    foreach (BapEnvironment be in _incidBapRowsUser)
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
+                    _incidBapRowsUser = null;
+                }
+
+                // Clear lookup table caches
+                ClearLookupTableCaches();
+
+                // Clear workflow controllers
+                _viewModelBulkUpdate = null;
+                _viewModelOSMMUpdate = null;
+                _viewModelUpd = null;
+
+                WriteInitLog("UnloadApplication COMPLETED");
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - we're cleaning up
+                WriteInitLog($"UnloadApplication ERROR: {ex.Message}");
+                Debug.WriteLine($"Error during UnloadApplication: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// Clears all lookup table caches to free memory and ensure fresh data on next initialization.
+        /// </summary>
+        private void ClearLookupTableCaches()
+        {
+            _reasonCodes = null;
+            _reasonCodesWithNone = null;
+            _processCodes = null;
+            _processCodesWithNone = null;
+            _noneHabitatClassRow = null;
+            _habitatClassCodesWithNone = null;
+            _qualityDeterminationCodes = null;
+            _qualityInterpretationCodes = null;
+
+            _lutBoundaryMap = null;
+            _lutCondition = null;
+            _lutConditionQualifier = null;
+            _lutHabitatClass = null;
+            _lutHabitatType = null;
+            _lutHabitatTypePrimary = null;
+            _lutHabitatTypeSecondary = null;
+            _lutIhsComplex = null;
+            _lutIhsFormation = null;
+            _lutIhsHabitat = null;
+            _lutIhsManagement = null;
+            _lutIhsMatrix = null;
+            _lutImportance = null;
+            _lutLegacyHabitat = null;
+            _lutOsmmHabitatXref = null;
+            _lutPrimary = null;
+            _lutPrimaryBapHabitat = null;
+            _lutPrimaryCategory = null;
+            _lutPrimarySecondary = null;
+            _lutProcess = null;
+            _lutQualityDetermination = null;
+            _lutQualityInterpretation = null;
+            _lutReason = null;
+            _lutSecondary = null;
+            _lutSecondaryBapHabitat = null;
+            _lutSecondaryGroup = null;
+            _lutSources = null;
+
+            // Reset sentinel rows that are guarded by null-checks in InitializeToolPaneAsync.
+            // They hold typed DataRows tied to the disposed HluDataSet and must be recreated
+            // against the new dataset on the next reload, not reused from the old one.
+            _allRow = null;
+            _allEssRow = null;
+            _noneReasonRow = null;
+            _noneProcessRow = null;
         }
 
         #endregion Show DockPane
@@ -3512,7 +3802,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Set the default reason for updates if not already set.
-            if ((String.IsNullOrWhiteSpace(Reason)) && (_defaultReason != "<None>"))
+            if ((String.IsNullOrWhiteSpace(Reason)) && (_defaultReason != _codeNone))
             {
                 // _defaultReason stores the code; resolve to description for the VM.
                 var reasonRow = _lutReason?.FirstOrDefault(r =>
@@ -3522,7 +3812,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Set the default process for updates if not already set.
-            if ((String.IsNullOrWhiteSpace(Process)) && (_defaultProcess != "<None>"))
+            if ((String.IsNullOrWhiteSpace(Process)) && (_defaultProcess != _codeNone))
             {
                 // _defaultProcess stores the code; resolve to description for the VM.
                 var processRow = _lutProcess?.FirstOrDefault(r =>
@@ -3614,8 +3904,16 @@ namespace HLU.UI.ViewModel
             // Get user GIS options
             _minZoom = Settings.Default.MinAutoZoom;
             _autoZoomToSelection = Settings.Default.AutoZoomToSelection;
-            _warnBeforeMaxFeatures = Settings.Default.MaxFeaturesGISSelect;
+            // Clamp the join/warn threshold to the configured user min/max bounds.
+            _warnBeforeMaxFeatures = Math.Clamp(
+                Settings.Default.GdbJoinThreshold,
+                Settings.Default.GdbJoinThresholdMin,
+                Settings.Default.GdbJoinThresholdMax);
             _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
+
+            // Propagate the join threshold to the GIS layer instance if it is already initialised.
+            if (_gisApp != null)
+                _gisApp.GdbJoinThreshold = _warnBeforeMaxFeatures;
 
             // Get user history options
             _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
@@ -3634,7 +3932,7 @@ namespace HLU.UI.ViewModel
             _defaultProcess = Settings.Default.DefaultProcess;
             // Store null when <None> is selected so HabitatClass getter leaves the field unset.
             string storedHabitatClass = Settings.Default.DefaultHabitatClass;
-            _defaultHabitatClass = storedHabitatClass == "<None>" ? null : storedHabitatClass;
+            _defaultHabitatClass = storedHabitatClass == _codeNone ? null : storedHabitatClass;
             _defaultSecondaryGroup = Settings.Default.DefaultSecondaryGroup;
             _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
@@ -3755,8 +4053,9 @@ namespace HLU.UI.ViewModel
                                 // Set the new current row index.
                                 _incidCurrentRowIndex = value;
 
-                                // Clear any existing navigation messages
+                                // Clear any existing navigation and GIS messages
                                 ClearMessage(category: MessageCategory.Navigation);
+                                ClearMessage(category: MessageCategory.GIS);
 
                                 // Move to the new incid
                                 await NewIncidCurrentRowAsync();
@@ -4161,7 +4460,7 @@ namespace HLU.UI.ViewModel
                 userResponse = MessageBoxResult.Yes;
                 if (!IsDirty)
                 {
-                    userResponse = _saving ? MessageBox.Show("The current record has not been changed.\n" +
+                    userResponse = _saving ? MessageBox.Show("The current record has not been changed.\n\n" +
                         "Would you still like to save the record?", "HLU: Save",
                         MessageBoxButton.YesNoCancel, MessageBoxImage.Question) : MessageBoxResult.Yes;
                 }
@@ -4190,7 +4489,7 @@ namespace HLU.UI.ViewModel
                 if (CanUpdate)
                 {
                     userResponse = MessageBox.Show("The current record has been changed." +
-                        "\n\nWould you like to leave this record discarding your changes?",
+                        "\n\nLeave this record and discard your changes?",
                         "HLU: Selection", MessageBoxButton.YesNo, MessageBoxImage.Exclamation,
                         MessageBoxResult.Yes);
                     if (userResponse == MessageBoxResult.Yes)
@@ -4202,7 +4501,7 @@ namespace HLU.UI.ViewModel
                 {
                     userResponse = MessageBox.Show("The current record has been changed, " +
                         "but it cannot be saved at this time because it is in error." +
-                        "\n\nWould you like to leave this record discarding your changes?",
+                        "\n\nLeave this record and discard your changes?",
                         "HLU: Selection", MessageBoxButton.YesNo, MessageBoxImage.Exclamation,
                         MessageBoxResult.No);
                     if (userResponse == MessageBoxResult.Yes)

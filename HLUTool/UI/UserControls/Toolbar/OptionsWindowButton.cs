@@ -18,7 +18,6 @@
 
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using HLU.Data.Model;
 using HLU.UI.View;
 using HLU.UI.ViewModel;
 using System;
@@ -68,35 +67,31 @@ namespace HLU.UI.UserControls.Toolbar
         {
             try
             {
-                // Ensure the window is shown on the UI thread
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                // Create Options window
+                _windowOptions = new()
                 {
-                    // Create Options window
-                    _windowOptions = new()
-                    {
-                        // Set ArcGIS Pro as the parent
-                        Owner = FrameworkApplication.Current.MainWindow,
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                        Topmost = true
-                    };
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
+                };
 
-                    // Initialize the ViewModel for the options window
-                    _viewModelOptions = new()
-                    {
-                        DisplayName = "Options"
-                    };
+                // Initialize the ViewModel for the options window
+                _viewModelOptions = new()
+                {
+                    DisplayName = "Options"
+                };
 
-                    // when ViewModel asks to be closed, close window
-                    _viewModelOptions.RequestClose -= ViewModelOptions_RequestClose; // Safety: avoid double subscription.
-                    _viewModelOptions.RequestClose +=
-                        new ViewModelWindowOptions.RequestCloseEventHandler(ViewModelOptions_RequestClose);
+                // when ViewModel asks to be closed, close window
+                _viewModelOptions.RequestClose -= ViewModelOptions_RequestClose; // Safety: avoid double subscription.
+                _viewModelOptions.RequestClose +=
+                    new ViewModelWindowOptions.RequestCloseEventHandler(ViewModelOptions_RequestClose);
 
-                    // allow all controls in window to bind to ViewModel by setting DataContext
-                    _windowOptions.DataContext = _viewModelOptions;
+                // allow all controls in window to bind to ViewModel by setting DataContext
+                _windowOptions.DataContext = _viewModelOptions;
 
-                    // show window
-                    _windowOptions.ShowDialog();
-                });
+                // show window
+                _windowOptions.ShowDialog();
             }
             catch (Exception ex)
             {
@@ -118,8 +113,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on the main window visibility.
-            bool isEnabled = _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = isEnabled;
+            Enabled = _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when the main window is not visible.";

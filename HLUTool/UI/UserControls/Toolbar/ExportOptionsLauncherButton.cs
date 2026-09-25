@@ -40,6 +40,24 @@ namespace HLU.UI.UserControls.Toolbar
 
         #endregion Fields
 
+        #region Constructor
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public ExportOptionsLauncherButton()
+        {
+            // Get the dockpane DAML id.
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
+            if (pane == null)
+                return;
+
+            // Get the ViewModel by casting the dockpane.
+            _viewModel = pane as ViewModelWindowMain;
+        }
+
+        #endregion Constructor
+
         #region Overrides
 
         /// <summary>
@@ -49,50 +67,39 @@ namespace HLU.UI.UserControls.Toolbar
         {
             try
             {
-                // Get the main ViewModel
-                DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
-                if (pane == null)
-                    return;
-
-                _viewModel = pane as ViewModelWindowMain;
-
-                // Ensure the window is shown on the UI thread
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                // Initialize the options window and its ViewModel
+                _windowOptions = new()
                 {
-                    // Initialize the options window and its ViewModel
-                    _windowOptions = new()
-                    {
-                        Owner = FrameworkApplication.Current.MainWindow,
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                        Topmost = true
-                    };
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
+                };
 
-                    // Initialize the ViewModel for the options window
-                    _viewModelOptions = new()
-                    {
-                        DisplayName = "Options"
-                    };
+                // Initialize the ViewModel for the options window
+                _viewModelOptions = new()
+                {
+                    DisplayName = "Options"
+                };
 
-                    // Set the selected tab to "Export" in the User category
-                    var exportTab = _viewModelOptions.NavigationItems
-                        .FirstOrDefault(n => n.Category == "User" && n.Name == "Export");
+                // Set the selected tab to "Export" in the User category
+                var exportTab = _viewModelOptions.NavigationItems
+                    .FirstOrDefault(n => n.Category == "User" && n.Name == "Export");
 
-                    // If the Export tab is found, set it as the selected view
-                    if (exportTab != null)
-                        _viewModelOptions.SelectedView = exportTab;
+                // If the Export tab is found, set it as the selected view
+                if (exportTab != null)
+                    _viewModelOptions.SelectedView = exportTab;
 
-                    // Subscribe to the RequestClose event to handle closing the options window and applying settings if needed
-                    _viewModelOptions.RequestClose += (applySettings) =>
-                    {
-                        _windowOptions.Close();
-                        if (applySettings)
-                            _viewModel.ApplySettings();
-                    };
+                // Subscribe to the RequestClose event to handle closing the options window and applying settings if needed
+                _viewModelOptions.RequestClose += (applySettings) =>
+                {
+                    _windowOptions.Close();
+                    if (applySettings)
+                        _viewModel.ApplySettings();
+                };
 
-                    // Set the DataContext of the options window to its ViewModel and show the window
-                    _windowOptions.DataContext = _viewModelOptions;
-                    _windowOptions.ShowDialog();
-                });
+                // Set the DataContext of the options window to its ViewModel and show the window
+                _windowOptions.DataContext = _viewModelOptions;
+                _windowOptions.ShowDialog();
             }
             catch (Exception ex)
             {

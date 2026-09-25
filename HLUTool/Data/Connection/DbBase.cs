@@ -246,16 +246,20 @@ namespace HLU.Data.Connection
         /// <returns>A user-readable database error message.</returns>
         public static string GetSqlErrorMessage(Exception exception)
         {
+            Exception innermost = exception;
             for (Exception current = exception; current != null; current = current.InnerException)
             {
                 if (current is SqlException sqlException)
                 {
                     return $"Database error {sqlException.Number}: {sqlException.Message}";
                 }
+                innermost = current;
             }
 
-            // Fallback if no SQL exception was found.
-            return exception.Message;
+            // Fallback if no SQL exception was found: use the innermost exception
+            // message, as it usually contains the actual database error text rather
+            // than an outer wrapper message like "Failed to update table [x].".
+            return innermost.Message;
         }
 
         #endregion Public Static

@@ -115,11 +115,12 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanFilterByIncid and main window visibility.
-            bool canFilterByIncid = _viewModel.CanFilterByIncid && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = canFilterByIncid;
+            Enabled = _viewModel.CanFilterByIncid && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 There are no features to filter\n\u2022 The main window is not visible.";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 There are no features to filter\n" +
+                "\u2022 The main window is not visible.";
         }
 
         #endregion Overrides

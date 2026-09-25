@@ -50,34 +50,42 @@ namespace HLU.UI.ViewModel
         {
             get; set;
         }
+
         public string Spatial
         {
             get; set;
         }
+
         public string Change
         {
             get; set;
         }
+
         public int Rejected
         {
             get; set;
         }
+
         public int Ignored
         {
             get; set;
         }
+
         public int Proposed
         {
             get; set;
         }
+
         public int Pending
         {
             get; set;
         }
+
         public int Applied
         {
             get; set;
         }
+
         public int Total
         {
             get; set;
@@ -96,11 +104,11 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains the view model for the OSMM Updates Query window.
     /// </summary>
-    class ViewModelWindowQueryOSMM : ViewModelBase, INotifyPropertyChanged
+    internal class ViewModelWindowQueryOSMM : ViewModelBase, INotifyPropertyChanged
     {
         #region Fields
 
-        ViewModelWindowMain _viewModelMain;
+        private ViewModelWindowMain _viewModelMain;
 
         public static HluDataSet HluDatasetStatic = null;
 
@@ -130,7 +138,7 @@ namespace HLU.UI.ViewModel
         private string _osmmSpatialFlag;
         private string _osmmChangeFlag;
 
-        private string _codeAnyRow = Settings.Default.CodeAnyRow;
+        private string _codeAny = Settings.Default.CodeAny;
 
         private string _displayName = "OSMM Updates Filter";
 
@@ -157,9 +165,9 @@ namespace HLU.UI.ViewModel
             _viewModelMain = viewModelMain;
 
             // Reset all the filter fields.
-            _osmmProcessFlag = _codeAnyRow;
-            _osmmSpatialFlag = _codeAnyRow;
-            _osmmChangeFlag = _codeAnyRow;
+            _osmmProcessFlag = _codeAny;
+            _osmmSpatialFlag = _codeAny;
+            _osmmChangeFlag = _codeAny;
 
             // Set the default status value
             if (_viewModelMain.IsOsmmBulkMode)
@@ -331,9 +339,9 @@ namespace HLU.UI.ViewModel
         private async void ResetOSMMFilterClicked(object param)
         {
             // Reset all the filter fields.
-            _osmmProcessFlag = _codeAnyRow;
-            _osmmSpatialFlag = _codeAnyRow;
-            _osmmChangeFlag = _codeAnyRow;
+            _osmmProcessFlag = _codeAny;
+            _osmmSpatialFlag = _codeAny;
+            _osmmChangeFlag = _codeAny;
 
             // Set the default status value
             if (_viewModelMain.IsOsmmBulkMode)
@@ -607,7 +615,7 @@ namespace HLU.UI.ViewModel
         private HluDataSet.lut_osmm_updates_processRow[] AnyRowOSMMUpdatesProcess(int sortOrder)
         {
             HluDataSet.lut_osmm_updates_processRow anyRow = _hluDataset.lut_osmm_updates_process.Newlut_osmm_updates_processRow();
-            anyRow.code = _codeAnyRow;
+            anyRow.code = _codeAny;
             anyRow.sort_order = sortOrder;
             anyRow.description = String.Empty;
             return [anyRow];
@@ -622,7 +630,7 @@ namespace HLU.UI.ViewModel
         private HluDataSet.lut_osmm_updates_spatialRow[] AnyRowOSMMUpdatesSpatial(int sortOrder)
         {
             HluDataSet.lut_osmm_updates_spatialRow anyRow = _hluDataset.lut_osmm_updates_spatial.Newlut_osmm_updates_spatialRow();
-            anyRow.code = _codeAnyRow;
+            anyRow.code = _codeAny;
             anyRow.sort_order = sortOrder;
             anyRow.description = String.Empty;
             return [anyRow];
@@ -637,7 +645,7 @@ namespace HLU.UI.ViewModel
         private HluDataSet.lut_osmm_updates_changeRow[] AnyRowOSMMUpdatesChange(int sortOrder)
         {
             HluDataSet.lut_osmm_updates_changeRow anyRow = _hluDataset.lut_osmm_updates_change.Newlut_osmm_updates_changeRow();
-            anyRow.code = _codeAnyRow;
+            anyRow.code = _codeAny;
             anyRow.sort_order = sortOrder;
             anyRow.description = String.Empty;
             return [anyRow];
@@ -739,7 +747,8 @@ namespace HLU.UI.ViewModel
             StringBuilder whereClause = new();
 
             // Add SiteID prefix filter to constrain counts to the active layer.
-            string siteIdFilter = String.Format("{0} LIKE {1}",
+            // Include " AND " prefix so it can be appended after the status condition.
+            string siteIdFilter = String.Format(" AND {0} LIKE {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.incidColumn.ColumnName),
                 _db.QuoteValue(_viewModelMain.RecIDs.SiteID + ":%"));
             whereClause.Append(siteIdFilter);
@@ -747,19 +756,19 @@ namespace HLU.UI.ViewModel
             // Append the selected flags to the WHERE clause if they are not "Any". The "Any" option
             // will show all OSMM Updates regardless of the flag value, so no need to filter by that
             // flag in the query.
-            if (!String.IsNullOrEmpty(_osmmProcessFlag) && _osmmProcessFlag != _codeAnyRow)
+            if (!String.IsNullOrEmpty(_osmmProcessFlag) && _osmmProcessFlag != _codeAny)
             {
                 whereClause.Append(String.Format(" AND {0} = {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.process_flagColumn.ColumnName), _osmmProcessFlag));
             }
 
-            if (!String.IsNullOrEmpty(_osmmSpatialFlag) && _osmmSpatialFlag != _codeAnyRow)
+            if (!String.IsNullOrEmpty(_osmmSpatialFlag) && _osmmSpatialFlag != _codeAny)
             {
                 whereClause.Append(String.Format(" AND {0} = {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.spatial_flagColumn.ColumnName), _db.QuoteValue(_osmmSpatialFlag)));
             }
 
-            if (!String.IsNullOrEmpty(_osmmChangeFlag) && _osmmChangeFlag != _codeAnyRow)
+            if (!String.IsNullOrEmpty(_osmmChangeFlag) && _osmmChangeFlag != _codeAny)
             {
                 whereClause.Append(String.Format(" AND {0} = {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.change_flagColumn.ColumnName), _db.QuoteValue(_osmmChangeFlag)));
@@ -804,7 +813,7 @@ namespace HLU.UI.ViewModel
 
             // Set the filter count based on the selected status. This will be used to determine
             // whether the filter can be applied.
-            if (!String.IsNullOrEmpty(_osmmUpdatesStatus) && _osmmUpdatesStatus != _codeAnyRow)
+            if (!String.IsNullOrEmpty(_osmmUpdatesStatus) && _osmmUpdatesStatus != _codeAny)
             {
                 switch (_osmmUpdatesStatus)
                 {
@@ -833,6 +842,13 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidOSMMUpdatesProposedCount));
 
             OnPropertyChanged(nameof(CanApplyOSMMFilter));
+
+            // Force the Ok button (and any other commands bound via RelayCommand) to
+            // re-evaluate their CanExecute state immediately. Without this, the button's
+            // enabled state can lag behind the freshly calculated counts because
+            // RelayCommand.CanExecuteChanged only forwards to CommandManager.RequerySuggested,
+            // which is normally only re-queried on UI input events.
+            CommandManager.InvalidateRequerySuggested();
 
             // Reset the cursor back to normal.
             if (!suppressCursorChange)

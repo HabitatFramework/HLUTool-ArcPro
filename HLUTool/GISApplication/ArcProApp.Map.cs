@@ -994,13 +994,16 @@ namespace HLU.GISApplication
                         case esriGeometryType.esriGeometryPolygon:
                             detectedGeometryType = HluGeometryTypes.Polygon;
                             break;
+
                         case esriGeometryType.esriGeometryPolyline:
                             detectedGeometryType = HluGeometryTypes.Line;
                             break;
+
                         case esriGeometryType.esriGeometryPoint:
                         case esriGeometryType.esriGeometryMultipoint:
                             detectedGeometryType = HluGeometryTypes.Point;
                             break;
+
                         default:
                             return HluLayerCheckResult.Invalid();
                     }
@@ -1172,6 +1175,43 @@ namespace HLU.GISApplication
                 string[] hluFieldNames,
                 HluGeometryTypes geometryType = HluGeometryTypes.Polygon)
                 => new(true, featureLayer, featureClass, hluFieldMap, hluFieldNames, geometryType);
+        }
+
+        /// <summary>
+        /// Gets the geometry type of a layer by name without activating it.
+        /// </summary>
+        /// <param name="layerName">The name of the layer to check.</param>
+        /// <returns>
+        /// The geometry type of the layer, or <see cref="HluGeometryTypes.Unknown"/> if the
+        /// layer cannot be found or its geometry type cannot be determined.
+        /// </returns>
+        public async Task<HluGeometryTypes> GetLayerGeometryTypeAsync(string layerName)
+        {
+            if (String.IsNullOrEmpty(layerName))
+                return HluGeometryTypes.Unknown;
+
+            try
+            {
+                FeatureLayer featureLayer = await FindLayerAsync(layerName);
+                if (featureLayer == null)
+                    return HluGeometryTypes.Unknown;
+
+                return await QueuedTask.Run(() =>
+                {
+                    return featureLayer.ShapeType switch
+                    {
+                        esriGeometryType.esriGeometryPolygon => HluGeometryTypes.Polygon,
+                        esriGeometryType.esriGeometryPolyline => HluGeometryTypes.Line,
+                        esriGeometryType.esriGeometryPoint => HluGeometryTypes.Point,
+                        esriGeometryType.esriGeometryMultipoint => HluGeometryTypes.Point,
+                        _ => HluGeometryTypes.Unknown
+                    };
+                });
+            }
+            catch
+            {
+                return HluGeometryTypes.Unknown;
+            }
         }
 
         #endregion HLULayers

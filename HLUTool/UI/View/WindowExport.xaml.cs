@@ -18,6 +18,8 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Framework.Controls;
+using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace HLU.UI.View
 {
@@ -29,6 +31,21 @@ namespace HLU.UI.View
         public WindowExport()
         {
             InitializeComponent();
+
+            // Force validation when the window is loaded
+            Loaded += (s, e) => ForceValidation();
+        }
+
+        /// <summary>
+        /// Forces validation on the Export Format ComboBox to ensure error styling appears immediately.
+        /// </summary>
+        private void ForceValidation()
+        {
+            // Get the binding expression for the ComboBox's SelectedValue property
+            BindingExpression bindingExpression = ComboBoxFormat.GetBindingExpression(ComboBox.SelectedValueProperty);
+
+            // Force the binding to update and trigger validation
+            bindingExpression?.UpdateSource();
         }
     }
 }

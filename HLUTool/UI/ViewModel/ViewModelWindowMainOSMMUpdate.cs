@@ -18,9 +18,12 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Internal.Framework.Controls;
 using HLU.Data;
+using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Properties;
+using HLU.UI;
 using System;
 using System.Data;
 using System.Threading.Tasks;
@@ -33,7 +36,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Functionality to process proposed OSMM Updates.
     /// </summary>
-    class ViewModelWindowMainOSMMUpdate
+    internal class ViewModelWindowMainOSMMUpdate
     {
         #region Fields
 
@@ -121,7 +124,7 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                _viewModelMain.ChangeCursor(Cursors.Wait, "Updating ...");
+                _viewModelMain.ChangeCursor(Cursors.Wait, "Updating OSMM update ...");
 
                 // Only update DateTime fields to whole seconds.
                 // Fractions of a second can cause rounding differences when
@@ -174,8 +177,9 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.DataBase.RollbackTransaction();
 
                 // Show error message
+                string exMessage = HLU.Data.Connection.DbBase.GetSqlErrorMessage(ex);
                 MessageBox.Show("OSMM UpdateAsync failed. The error message returned was:\n\n" +
-                    ex.Message, "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Error);
+                    exMessage, "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 return false;
             }
@@ -205,14 +209,14 @@ namespace HLU.UI.ViewModel
         /// </param>
         internal async Task OSMMUpdateAllAsync(int updateStatus)
         {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Updating all ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Updating all OSMM updates...");
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
             try
             {
                 // Apply the updates to the current incid and all following incids
-                BulkIncidOSMMUpdates(updateStatus, _viewModelMain.IncidOSMMUpdatesRows[0].incid);
+                int incidsProcessed = BulkIncidOSMMUpdates(updateStatus, _viewModelMain.IncidOSMMUpdatesRows[0].incid);
 
                 _viewModelMain.DataBase.CommitTransaction();
                 _viewModelMain.HluDataset.AcceptChanges();
@@ -221,12 +225,23 @@ namespace HLU.UI.ViewModel
                 // all been processed)
                 int newIndex = _viewModelMain.IncidSelection.Rows.Count + 1;
                 await _viewModelMain.MoveIncidCurrentRowIndexAsync(newIndex);
+
+                // Inform the user how many incids were processed.
+                string action = updateStatus switch
+                {
+                    0 => "accepted",
+                    -99 => "rejected",
+                    _ => "processed"
+                };
+                _viewModelMain.ShowMessage($"{incidsProcessed} remaining OSMM update(s) in filter were {action}.",
+                    MessageType.Information, MessageCategory.OSMMReview, autoDismissSeconds: 5);
             }
             catch (Exception ex)
             {
                 _viewModelMain.DataBase.RollbackTransaction();
+                string exMessage = HLU.Data.Connection.DbBase.GetSqlErrorMessage(ex);
                 MessageBox.Show("OSMM UpdateAsync Failed. The error message returned was:\n\n" +
-                    ex.Message, "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Error);
+                    exMessage, "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -278,7 +293,8 @@ namespace HLU.UI.ViewModel
         /// <exception cref="Exception">
         /// Thrown if the update operation fails for any record in the "incid_osmm_updates" table.
         /// </exception>
-        private void BulkIncidOSMMUpdates(int updateStatus, string fromIncid)
+        /// <returns>The number of incids that were updated.</returns>
+        private int BulkIncidOSMMUpdates(int updateStatus, string fromIncid)
         {
             // Get the incid column number
             int incidOrdinal =
@@ -317,22 +333,31 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.OSMMUpdateWhereClause);
 
                 // Execute the update statement within the caller's transaction.
+                int rowsAffected;
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         updateStatement,
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {
                     throw new Exception($"Failed to update OSMM updates in table [{_viewModelMain.HluDataset.incid_osmm_updates.TableName}].", ex);
                 }
+
+                return rowsAffected < 0 ? 0 : rowsAffected;
             }
             else
             {
                 // Get the from incid number
                 int fromIncidNum = RecordIds.IncidNumber(fromIncid);
+
+                // Track the number of incids processed.
+                int incidsProcessed = 0;
 
                 // Build an UPDATE statement for the osmm_incid_updates table
                 string updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4}, {5} = {6} WHERE {7} = {8}",
@@ -361,17 +386,24 @@ namespace HLU.UI.ViewModel
                         // Execute the update statement within the caller's transaction.
                         try
                         {
-                            _viewModelMain.DataBase.ExecuteNonQuery(
+                            int updRowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                                 String.Format(updateStatement, currIncid),
                                 _viewModelMain.DataBase.Connection.ConnectionTimeout,
                                 CommandType.Text);
+
+                            if (updRowsAffected == -1)
+                                throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                         }
                         catch (Exception ex)
                         {
                             throw new Exception($"Failed to update OSMM updates in table [{_viewModelMain.HluDataset.incid_osmm_updates.TableName}].", ex);
                         }
+
+                        incidsProcessed++;
                     }
                 }
+
+                return incidsProcessed;
             }
         }
 

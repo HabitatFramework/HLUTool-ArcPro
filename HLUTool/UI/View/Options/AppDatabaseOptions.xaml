@@ -136,7 +136,7 @@
                             ToolTip="Clear the saved connection settings." />
                         <controls:InfoButton
                             Grid.Column="1"
-                            Margin="5,0,0,0"
+                            Margin="1,0,0,0"
                             Description="Clears the saved database connection settings. You will be prompted to choose a new connection the next time the HLU Tool is loaded.&#10;&#10;Use this option if the database server has moved, the database name has changed, or the connection is no longer valid."
                             Header="Reset Database Connection" />
                     </Grid>

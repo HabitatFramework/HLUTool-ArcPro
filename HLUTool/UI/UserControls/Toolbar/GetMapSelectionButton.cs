@@ -96,11 +96,12 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanGetMapSelection and main window visibility.
-            bool canGetMapSelection = _viewModel.CanGetMapSelection && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = canGetMapSelection;
+            Enabled = _viewModel.CanGetMapSelection && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 Bulk Update mode is active\n\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 Bulk Update mode is active\n" +
+                "\u2022 The main window is not visible";
         }
 
         #endregion Overrides

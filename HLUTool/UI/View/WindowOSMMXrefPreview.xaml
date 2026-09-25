@@ -1,0 +1,251 @@
+<controls:ProWindow
+    x:Class="HLU.UI.View.WindowOSMMXrefPreview"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:HLU.UI.ViewModel"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="{Binding WindowTitle}"
+    Width="Auto"
+    MinWidth="700"
+    MinHeight="350"
+    MaxWidth="1100"
+    MaxHeight="800"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOSMMXrefPreview}"
+    Icon="..\..\Images\HLUTool16.png"
+    ResizeMode="CanResizeWithGrip"
+    ShowInTaskbar="False"
+    SizeToContent="Height"
+    Style="{DynamicResource ProWindowStyle}"
+    WindowStartupLocation="CenterOwner"
+    mc:Ignorable="d">
+
+    <Grid Margin="4">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="4" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  Preview data grid  -->
+        <GroupBox Grid.Row="0" Header="OSMM Attribute Combinations">
+            <DataGrid
+                Margin="4,0,4,4"
+                AutoGenerateColumns="False"
+                BorderBrush="Black"
+                BorderThickness="1"
+                CanUserAddRows="False"
+                CanUserDeleteRows="False"
+                CanUserReorderColumns="False"
+                CanUserResizeColumns="True"
+                CanUserSortColumns="True"
+                HeadersVisibility="All"
+                IsReadOnly="True"
+                ItemsSource="{Binding OsmmXrefPreviewRows}"
+                RowHeight="24"
+                SelectionMode="Single"
+                SelectionUnit="FullRow"
+                Style="{DynamicResource Esri_DataGrid}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn
+                        Width="Auto"
+                        MinWidth="60"
+                        Binding="{Binding Make}"
+                        Header="Make" />
+                    <DataGridTextColumn
+                        Width="Auto"
+                        MinWidth="80"
+                        Binding="{Binding DescGroup}"
+                        Header="Desc Group" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="100"
+                        Binding="{Binding DescTerm}"
+                        Header="Desc Term" />
+                    <DataGridTextColumn
+                        Width="Auto"
+                        MinWidth="80"
+                        Binding="{Binding Theme}"
+                        Header="Theme" />
+                    <DataGridTextColumn
+                        Width="Auto"
+                        MinWidth="67"
+                        Binding="{Binding FeatCode}"
+                        Header="Feat Code" />
+                    <DataGridTextColumn
+                        Width="Auto"
+                        MinWidth="50"
+                        Binding="{Binding Count}"
+                        Header="Count">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Right" />
+                                <Setter Property="Margin" Value="0,0,4,0" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn
+                        Width="Auto"
+                        MinWidth="60"
+                        Binding="{Binding XRefIdDisplay}"
+                        Header="XRef ID"
+                        SortMemberPath="OsmmXrefId">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Right" />
+                                <Setter Property="Margin" Value="0,0,4,0" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn
+                        Width="Auto"
+                        MinWidth="93"
+                        Binding="{Binding HabitatPrimary}"
+                        Header="Habitat Primary" />
+                    <DataGridTextColumn
+                        Width="Auto"
+                        MinWidth="130"
+                        Binding="{Binding HabitatSecondaries}"
+                        Header="Habitat Secondaries" />
+                    <!--  Status column with colour coding  -->
+                    <DataGridTemplateColumn
+                        Width="Auto"
+                        MinWidth="150"
+                        Header="Status"
+                        SortMemberPath="Status">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    Margin="4,0"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Status}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                            <Style.Triggers>
+                                                <!--  No match (red)  -->
+                                                <DataTrigger Binding="{Binding IsMatched}" Value="False">
+                                                    <Setter Property="Foreground" Value="#FFC00000" />
+                                                </DataTrigger>
+                                                <!--  Matched but invalid primary (orange)  -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsMatched}" Value="True" />
+                                                        <Condition Binding="{Binding IsPrimaryValid}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="#FFFF8C00" />
+                                                </MultiDataTrigger>
+                                                <!--  Matched but invalid secondaries (orange)  -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsMatched}" Value="True" />
+                                                        <Condition Binding="{Binding AreSecondariesValid}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="#FFFF8C00" />
+                                                </MultiDataTrigger>
+                                                <!--  Matched and all valid (green) - must be last to override  -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsMatched}" Value="True" />
+                                                        <Condition Binding="{Binding IsPrimaryValid}" Value="True" />
+                                                        <Condition Binding="{Binding AreSecondariesValid}" Value="True" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="#FF006400" />
+                                                </MultiDataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+
+        <!--  Warning panel - visible only when unmatched rows exist  -->
+        <Border
+            Grid.Row="1"
+            Margin="4,4,4,0"
+            Padding="8,6"
+            Background="#FFFFF3CD"
+            BorderBrush="#FFFFC107"
+            BorderThickness="1"
+            CornerRadius="2">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding UnmatchedWarning}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <TextBlock
+                Foreground="#FF856404"
+                Text="{Binding UnmatchedWarning}"
+                TextWrapping="Wrap" />
+        </Border>
+
+        <!--  Warning panel - visible only when invalid codes exist  -->
+        <Border
+            Grid.Row="2"
+            Margin="4,4,4,0"
+            Padding="8,6"
+            Background="#FFFFE0B2"
+            BorderBrush="#FFFF9800"
+            BorderThickness="1"
+            CornerRadius="2">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding InvalidCodesWarning}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <TextBlock
+                Foreground="#FFE65100"
+                Text="{Binding InvalidCodesWarning}"
+                TextWrapping="Wrap" />
+        </Border>
+
+        <!--  Button row  -->
+        <Grid Grid.Row="4" Margin="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="82" />
+                <ColumnDefinition Width="82" />
+            </Grid.ColumnDefinitions>
+            <Button
+                Grid.Column="0"
+                Width="100"
+                Margin="0,0,4,0"
+                Command="{Binding ExportCsvCommand}"
+                Style="{DynamicResource Esri_Button}">
+                _Export CSV...
+            </Button>
+            <Button
+                Grid.Column="2"
+                Margin="0,0,2,0"
+                Command="{Binding ProceedCommand}"
+                IsDefault="True"
+                Style="{DynamicResource Esri_Button}">
+                _Proceed
+            </Button>
+            <Button
+                Grid.Column="3"
+                Margin="2,0,0,0"
+                Command="{Binding CancelCommand}"
+                IsCancel="True"
+                Style="{DynamicResource Esri_Button}">
+                _Cancel
+            </Button>
+        </Grid>
+    </Grid>
+</controls:ProWindow>

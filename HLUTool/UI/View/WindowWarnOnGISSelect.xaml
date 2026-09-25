@@ -8,10 +8,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding WindowTitle}"
     MinWidth="300"
-    MinHeight="210"
+    MinHeight="170"
     d:DataContext="{d:DesignInstance Type=local:ViewModelWindowWarnOnGISSelect}"
     Icon="..\..\Images\HLUTool16.png"
-    ResizeMode="CanResizeWithGrip"
+    ResizeMode="NoResize"
     ShowInTaskbar="False"
     SizeToContent="WidthAndHeight"
     Style="{DynamicResource ProWindowStyle}"
@@ -33,8 +33,6 @@
                 <Grid Name="GridWarnOnGISSelect" Margin="2,2,2,2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -52,32 +50,6 @@
                             Text="{Binding LabelMessage}"
                             TextWrapping="Wrap" />
                     </Label>
-                    <Border
-                        Grid.Row="1"
-                        Grid.ColumnSpan="2"
-                        Margin="0,4,0,4"
-                        Padding="0"
-                        BorderBrush="Black"
-                        BorderThickness="0.5"
-                        Opacity="0.5" />
-                    <Label
-                        Name="LabelDoNotAskAgain"
-                        Grid.Row="2"
-                        Grid.Column="0"
-                        Margin="0,4,0,4"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        Content="Don't ask again"
-                        IsEnabled="{Binding Path=DoNotAskAgainEnabled, Mode=OneWay}" />
-                    <CheckBox
-                        Name="CheckBoxDontAsk"
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        Margin="0,4,0,4"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        IsChecked="{Binding Path=DoNotAskAgain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        IsEnabled="{Binding Path=DoNotAskAgainEnabled, Mode=OneWay}" />
                 </Grid>
             </GroupBox>
             <Grid

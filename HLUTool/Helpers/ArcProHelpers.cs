@@ -28,6 +28,7 @@ using ArcGIS.Desktop.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -267,6 +268,14 @@ namespace HLU.Helpers
         /// <summary>
         /// Add a field to a feature class or table.
         /// </summary>
+        /// <remarks>
+        /// <para><b>Note on Nullable Fields:</b></para>
+        /// <para>For file geodatabases, the <paramref name="fieldIsNullable"/> parameter controls whether the field
+        /// can store NULL values. However, for shapefiles, this parameter is <b>ignored</b> because the DBF format
+        /// (used by shapefiles for attribute tables) does not support true NULL values for text fields.
+        /// Shapefiles use empty strings to represent missing values instead.</para>
+        /// <para>If you require true nullable text fields, use a file geodatabase instead of a shapefile.</para>
+        /// </remarks>
         /// <param name="inTable">The input table or feature class.</param>
         /// <param name="fieldName">The name of the field to add.</param>
         /// <param name="fieldType">The type of the field.</param>
@@ -274,7 +283,7 @@ namespace HLU.Helpers
         /// <param name="fieldScale">The scale of the field.</param>
         /// <param name="fieldLength">The length of the field.</param>
         /// <param name="fieldAlias">The alias of the field.</param>
-        /// <param name="fieldIsNullable">Whether the field is nullable.</param>
+        /// <param name="fieldIsNullable">Whether the field is nullable (ignored for shapefiles - see remarks).</param>
         /// <param name="fieldIsRequred">Whether the field is required.</param>
         /// <param name="fieldDomain">The domain of the field.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains true if the field was successfully added, otherwise false.</returns>
@@ -1102,6 +1111,8 @@ namespace HLU.Helpers
             if (string.IsNullOrWhiteSpace(fieldNames))
                 return false;
 
+            string tablePath = System.IO.Path.Combine(gdbPath, inTable);
+
             return await QueuedTask.Run(async () =>
             {
                 try
@@ -1124,7 +1135,7 @@ namespace HLU.Helpers
                         return true;
 
                     // Set the parameters to add the index to the table or feature class.
-                    var parameters = Geoprocessing.MakeValueArray(inTable, fieldNames, indexName, "", "");
+                    var parameters = Geoprocessing.MakeValueArray(tablePath, fieldNames, indexName, "", "");
 
                     // Make a value array of the environments to be passed to the tool.
                     var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
@@ -1150,7 +1161,7 @@ namespace HLU.Helpers
                         {
                             Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
 
-                            System.Diagnostics.Debug.WriteLine(
+                            Debug.WriteLine(
                                 $"Failed to add index: {string.Join("\n", gp_result.Messages.Select(m => m.Text))}");
 
                             //var messages = gp_result.Messages;
@@ -1168,13 +1179,77 @@ namespace HLU.Helpers
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error checking for existing index: {ex.Message}");
+                    Debug.WriteLine($"Error checking for existing index: {ex.Message}");
                     return false;
                 }
             });
         }
 
         #endregion Indexes
+
+        #region Selection Table
+
+        /// <summary>
+        /// Creates a single-column incid selection table in the working geodatabase and populates it
+        /// with the supplied incid values. Any existing table with the same name is deleted first.
+        /// An attribute index is added to the incid field to make subsequent attribute joins fast.
+        /// </summary>
+        /// <param name="gdbPath">Full path to the working file geodatabase.</param>
+        /// <param name="tableName">Name to use for the temporary selection table.</param>
+        /// <param name="incidFieldName">Name of the incid field to create in the table.</param>
+        /// <param name="incidFieldLength">Maximum length of the incid text field.</param>
+        /// <param name="incids">The distinct incid values to write.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains
+        /// <see langword="true"/> if the table was created and populated successfully;
+        /// otherwise <see langword="false"/>.
+        /// </returns>
+        public static async Task<bool> WriteIncidSelectionTableAsync(
+            string gdbPath,
+            string tableName,
+            string incidFieldName,
+            int incidFieldLength,
+            IReadOnlyList<string> incids)
+        {
+            // Validate parameters.
+            if (string.IsNullOrEmpty(gdbPath) || string.IsNullOrEmpty(tableName) ||
+                string.IsNullOrEmpty(incidFieldName) || incids == null || incids.Count == 0)
+                return false;
+
+            // Build a one-column schema DataTable.
+            DataTable schema = new(tableName);
+            DataColumn col = new(incidFieldName, typeof(string))
+            {
+                MaxLength = incidFieldLength > 0 ? incidFieldLength : 20
+            };
+            schema.Columns.Add(col);
+
+            // Create (or recreate) the table using the existing helper.
+            bool created = await CreateTableAsync(gdbPath, tableName, schema);
+            if (!created)
+                return false;
+
+            // Populate the table using the bulk-insert helper.
+            var rows = incids
+                .Select(id => new Dictionary<string, object> { [incidFieldName] = id })
+                .ToList();
+
+            int inserted = await BulkInsertRowsAsync(gdbPath, tableName, rows);
+            if (inserted != incids.Count)
+                return false;
+
+            // Add an attribute index on the incid field to make the subsequent join fast.
+            // A failed index creation means the join would degrade to a full table scan,
+            // so treat it as a hard failure and return false.
+            string indexName = $"IX_{tableName}_{incidFieldName}";
+            bool indexed = await AddAttributeIndexAsync(gdbPath, tableName, incidFieldName, indexName);
+            if (!indexed)
+                return false;
+
+            return true;
+        }
+
+        #endregion Selection Table
 
         #region Joins
 
@@ -1378,7 +1453,7 @@ namespace HLU.Helpers
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error finding duplicate join fields: {ex.Message}");
+                    Debug.WriteLine($"Error finding duplicate join fields: {ex.Message}");
                     return null;
                 }
             });
@@ -1393,6 +1468,177 @@ namespace HLU.Helpers
             // Delete all duplicate fields using the DeleteField helper method.
             string fieldsToDelete = string.Join(";", duplicateFields);
             return await DeleteFieldAsync(featureClassPath, fieldsToDelete);
+        }
+
+        /// <summary>
+        /// Adds a temporary attribute join from a layer to a standalone table using the
+        /// <c>management.AddJoin</c> geoprocessing tool. The join is ephemeral (in-memory) and must
+        /// be removed with <see cref="RemoveJoinAsync"/> when no longer needed.
+        /// </summary>
+        /// <param name="layerName">The name of the feature layer in the active map.</param>
+        /// <param name="layerJoinField">The field in the layer to join on.</param>
+        /// <param name="joinTablePath">The full path to the join table in the geodatabase.</param>
+        /// <param name="joinTableField">The field in the join table to join on.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains
+        /// <see langword="true"/> if the join was added successfully; otherwise <see langword="false"/>.
+        /// </returns>
+        public static async Task<bool> AddJoinAsync(
+            string layerName,
+            string layerJoinField,
+            string joinTablePath,
+            string joinTableField)
+        {
+            if (string.IsNullOrEmpty(layerName) || string.IsNullOrEmpty(layerJoinField) ||
+                string.IsNullOrEmpty(joinTablePath) || string.IsNullOrEmpty(joinTableField))
+                return false;
+
+            // KEEP_ALL retains features with no matching row in the join table (a left outer join).
+            // This is important so the layer's total feature count is not changed.
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(
+                layerName, layerJoinField, joinTablePath, joinTableField, "KEEP_ALL");
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+            //Geoprocessing.OpenToolDialog("management.AddJoin", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult result = await Geoprocessing.ExecuteToolAsync(
+                    "management.AddJoin",
+                    parameters, environments, null, null, executeFlags);
+
+                if (result.IsFailed)
+                {
+                    Debug.WriteLine(
+                        $"AddJoin failed: {string.Join("; ", result.Messages.Select(m => m.Text))}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"AddJoin exception: {ex.Message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Removes a temporary attribute join previously added by <see cref="AddJoinAsync"/> using
+        /// the <c>management.RemoveJoin</c> geoprocessing tool.
+        /// </summary>
+        /// <param name="layerName">The name of the feature layer in the active map.</param>
+        /// <param name="joinTableName">
+        /// The base name (no path) of the table whose join should be removed.
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains
+        /// <see langword="true"/> if the join was removed successfully; otherwise <see langword="false"/>.
+        /// </returns>
+        public static async Task<bool> RemoveJoinAsync(string layerName, string joinTableName)
+        {
+            if (string.IsNullOrEmpty(layerName) || string.IsNullOrEmpty(joinTableName))
+                return false;
+
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(layerName, joinTableName);
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+            //Geoprocessing.OpenToolDialog("management.RemoveJoin", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult result = await Geoprocessing.ExecuteToolAsync(
+                    "management.RemoveJoin",
+                    parameters, environments, null, null, executeFlags);
+
+                if (result.IsFailed)
+                {
+                    Debug.WriteLine(
+                        $"RemoveJoin failed: {string.Join("; ", result.Messages.Select(m => m.Text))}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"RemoveJoin exception: {ex.Message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Selects features in a feature layer by attribute using the
+        /// <c>management.SelectLayerByAttribute</c> geoprocessing tool.
+        /// </summary>
+        /// <param name="layerName">The name of the feature layer in the active map.</param>
+        /// <param name="selectionType">
+        /// The selection type: <c>"NEW_SELECTION"</c>, <c>"ADD_TO_SELECTION"</c>,
+        /// <c>"REMOVE_FROM_SELECTION"</c>, <c>"SUBSET_SELECTION"</c>, or
+        /// <c>"CLEAR_SELECTION"</c>.
+        /// </param>
+        /// <param name="whereClause">
+        /// The SQL WHERE clause. May be empty when <paramref name="selectionType"/> is
+        /// <c>"CLEAR_SELECTION"</c>.
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains
+        /// <see langword="true"/> if the selection was applied successfully;
+        /// otherwise <see langword="false"/>.
+        /// </returns>
+        public static async Task<bool> SelectLayerByAttributeAsync(
+            string layerName,
+            string selectionType,
+            string whereClause = "")
+        {
+            // Check parameters
+            if (string.IsNullOrEmpty(layerName))
+                return false;
+
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(layerName, selectionType, whereClause);
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+            //Geoprocessing.OpenToolDialog("management.SelectLayerByAttribute", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult result = await Geoprocessing.ExecuteToolAsync(
+                    "management.SelectLayerByAttribute",
+                    parameters, environments, null, null, executeFlags);
+
+                if (result.IsFailed)
+                {
+                    Debug.WriteLine(
+                        $"SelectLayerByAttribute failed: " +
+                        $"{string.Join("; ", result.Messages.Select(m => m.Text))}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"SelectLayerByAttribute exception: {ex.Message}");
+                return false;
+            }
+
+            return true;
         }
 
         #endregion Joins
@@ -1762,9 +2008,11 @@ namespace HLU.Helpers
                     case GeometryType.Polygon:
                         geometryProps.Add($"{lengthField} PERIMETER_LENGTH");
                         break;
+
                     case GeometryType.Polyline:
                         geometryProps.Add($"{lengthField} LENGTH");
                         break;
+
                     case GeometryType.Point:
                     case GeometryType.Multipoint:
                         // Points don't have length, skip
@@ -1878,7 +2126,7 @@ namespace HLU.Helpers
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error getting geometry field names: {ex.Message}");
+                    Debug.WriteLine($"Error getting geometry field names: {ex.Message}");
                     return (null, null);
                 }
                 finally
@@ -1994,7 +2242,7 @@ namespace HLU.Helpers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error adding feature layer to map: {ex.Message}");
+                Debug.WriteLine($"Error adding feature layer to map: {ex.Message}");
                 return false;
             }
         }
@@ -2116,6 +2364,69 @@ namespace HLU.Helpers
             return await CopyFeaturesAsync(inFeatureClass, outFeatureClass, addToMap);
         }
 
+        /// <summary>
+        /// Calculate geometry attributes for features in a feature class or shapefile.
+        /// </summary>
+        /// <param name="inFeatures">The input feature class or shapefile.</param>
+        /// <param name="geometryProperties">Semicolon-separated list of geometry properties to calculate (e.g., "Shape_Leng LENGTH_GEODESIC;Shape_Area AREA_GEODESIC").</param>
+        /// <param name="lengthUnit">The length unit (optional, defaults to feature class unit).</param>
+        /// <param name="areaUnit">The area unit (optional, defaults to feature class unit).</param>
+        /// <param name="coordinateSystem">The coordinate system (optional, defaults to feature class coordinate system).</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the calculation was successful, otherwise false.</returns>
+        public static async Task<bool> CalculateGeometryAttributesAsync(
+            string inFeatures,
+            string geometryProperties,
+            string lengthUnit = "",
+            string areaUnit = "",
+            string coordinateSystem = "")
+        {
+            // Check if there is an input feature class.
+            if (string.IsNullOrEmpty(inFeatures))
+                return false;
+
+            // Check if there are geometry properties to calculate.
+            if (string.IsNullOrEmpty(geometryProperties))
+                return false;
+
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(
+                inFeatures,
+                geometryProperties,
+                lengthUnit,
+                areaUnit,
+                coordinateSystem);
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            // Set the geoprocessing flags.
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+            //Geoprocessing.OpenToolDialog("management.CalculateGeometryAttributes", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("management.CalculateGeometryAttributes", parameters, environments, null, null, executeFlags);
+
+                if (gp_result.IsFailed)
+                {
+                    Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
+
+                    var messages = gp_result.Messages;
+                    var errMessages = gp_result.ErrorMessages;
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                // Handle Exception.
+                return false;
+            }
+
+            return true;
+        }
+
         #endregion CopyFeatures
 
         #region Selection
@@ -2208,7 +2519,7 @@ namespace HLU.Helpers
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error getting distinct INCID values: {ex.Message}");
+                    Debug.WriteLine($"Error getting distinct INCID values: {ex.Message}");
                     return null;
                 }
 
@@ -2260,7 +2571,7 @@ namespace HLU.Helpers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error filtering table by INCIDs: {ex.Message}");
+                Debug.WriteLine($"Error filtering table by INCIDs: {ex.Message}");
                 return null;
             }
         }

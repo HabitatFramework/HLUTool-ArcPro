@@ -141,6 +141,7 @@ namespace HLU.UI
         public const string Split = "Split";
         public const string Merge = "Merge";
         public const string Insert = "Insert";
+        public const string OSMMLoad = "OSMMLoad";
         public const string General = "General";
     }
 }

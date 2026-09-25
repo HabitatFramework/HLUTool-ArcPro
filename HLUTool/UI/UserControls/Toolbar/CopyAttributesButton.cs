@@ -93,11 +93,13 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanCopy and main window visibility.
-            bool canCopy = _viewModel.CanCopy && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = canCopy;
+            Enabled = _viewModel.CanCopy && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 There is no current record\n\u2022 No copy boxes have been checked\n\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 There is no current record\n" +
+                "\u2022 No copy boxes have been checked\n" +
+                "\u2022 The main window is not visible";
         }
 
         #endregion Overrides

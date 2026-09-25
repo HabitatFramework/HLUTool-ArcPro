@@ -216,10 +216,28 @@ namespace HLU.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("<clear>")]
-        public string CodeDeleteRow {
+        [global::System.Configuration.DefaultSettingValueAttribute("<Clear>")]
+        public string CodeClear {
             get {
-                return ((string)(this["CodeDeleteRow"]));
+                return ((string)(this["CodeClear"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public int GdbJoinThresholdMin {
+            get {
+                return ((int)(this["GdbJoinThresholdMin"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50000")]
+        public int GdbJoinThresholdMax {
+            get {
+                return ((int)(this["GdbJoinThresholdMax"]));
             }
         }
         
@@ -227,12 +245,12 @@ namespace HLU.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1000")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int MaxFeaturesGISSelect {
+        public int GdbJoinThreshold {
             get {
-                return ((int)(this["MaxFeaturesGISSelect"]));
+                return ((int)(this["GdbJoinThreshold"]));
             }
             set {
-                this["MaxFeaturesGISSelect"] = value;
+                this["GdbJoinThreshold"] = value;
             }
         }
         
@@ -507,10 +525,10 @@ namespace HLU.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("<all>")]
-        public string CodeAnyRow {
+        [global::System.Configuration.DefaultSettingValueAttribute("<Any>")]
+        public string CodeAny {
             get {
-                return ((string)(this["CodeAnyRow"]));
+                return ((string)(this["CodeAny"]));
             }
         }
         
@@ -803,12 +821,12 @@ namespace HLU.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string ExportPath {
+        public string DefaultExportPath {
             get {
-                return ((string)(this["ExportPath"]));
+                return ((string)(this["DefaultExportPath"]));
             }
             set {
-                this["ExportPath"] = value;
+                this["DefaultExportPath"] = value;
             }
         }
         
@@ -961,6 +979,77 @@ namespace HLU.Properties {
             }
             set {
                 this["ResetDbConnection"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("hlu_osmm_staging")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public string DefaultBulkLoadLayer {
+            get {
+                return ((string)(this["DefaultBulkLoadLayer"]));
+            }
+            set {
+                this["DefaultBulkLoadLayer"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public string DefaultBulkLoadPath {
+            get {
+                return ((string)(this["DefaultBulkLoadPath"]));
+            }
+            set {
+                this["DefaultBulkLoadPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<None>")]
+        public string CodeNone {
+            get {
+                return ((string)(this["CodeNone"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<All>")]
+        public string CodeAll {
+            get {
+                return ((string)(this["CodeAll"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<Skip>")]
+        public string CodeSkip {
+            get {
+                return ((string)(this["CodeSkip"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<Gis>")]
+        public string CodeGIS {
+            get {
+                return ((string)(this["CodeGIS"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<All Essentials>")]
+        public string CodeAllEssentials {
+            get {
+                return ((string)(this["CodeAllEssentials"]));
             }
         }
     }
