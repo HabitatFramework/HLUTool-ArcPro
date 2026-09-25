@@ -1608,16 +1608,12 @@ namespace HLU.UI.ViewModel
                     // Add primary codes (skip any with a null/blank code) and mark the
                     // first non-preferred item so the template can draw a divider above it.
                     bool separatorMarked = false;
-                    Application.Current?.Dispatcher.Invoke(() =>
+                    foreach (CodeDescriptionBool item in primaryCodes.Where(c => !string.IsNullOrWhiteSpace(c.Code)))
                     {
-                        foreach (CodeDescriptionBool item in primaryCodes.Where(c => !string.IsNullOrWhiteSpace(c.Code)))
+                        if (!separatorMarked && !item.Preferred && primaryCodes.Any(c => c.Preferred))
                         {
-                            if (!separatorMarked && !item.Preferred && primaryCodes.Any(c => c.Preferred))
-                            {
-                                item.IsSeparator = true;
-                                separatorMarked = true;
-                            }
-                            _primaryCodes.Add(item);
+                            item.IsSeparator = true;
+                            separatorMarked = true;
                         }
                     }
 
