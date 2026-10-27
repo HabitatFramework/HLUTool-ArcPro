@@ -296,6 +296,9 @@
     <Setting Name="MaxFeaturesExport" Roaming="true" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">50000</Value>
     </Setting>
+    <Setting Name="MaxFeaturesShapefile" Roaming="true" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">500000</Value>
+    </Setting>
     <Setting Name="ResetDbConnection" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>

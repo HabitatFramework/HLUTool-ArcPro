@@ -435,6 +435,37 @@ namespace HLU.UI.ViewModel
                     // Add the length of the GIS mandatory fields to the total attribute length.
                     _attributesLength += 20;
 
+                    // Detect names that would be truncated to 10 characters or that
+                    // would collide (case-insensitively) once truncated.
+                    List<string> nameIssues = [];
+                    HashSet<string> shortNames = new(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (ExportField exportField in exportFields)
+                    {
+                        string name = exportField.FieldName ?? string.Empty;
+                        string shortName = name.Length > 10 ? name[..10] : name;
+
+                        if (name.Length > 10)
+                            nameIssues.Add($"'{name}' will be truncated to '{shortName}'");
+
+                        if (!shortNames.Add(shortName))
+                            nameIssues.Add($"'{name}' duplicates the shapefile field name '{shortName}'");
+                    }
+
+                    if (nameIssues.Count > 0)
+                    {
+                        MessageBoxResult nameResult = MessageBox.Show(
+                            "Some field names are not valid for a shapefile:\n\n" +
+                            string.Join("\n", nameIssues) +
+                            "\n\nDo you want to continue anyway?",
+                            "HLU: Export",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning);
+
+                        if (nameResult != MessageBoxResult.Yes)
+                            return;
+                    }
+
                     // Check attribute length limit (recommended, not strictly enforced)
                     if (_attributesLength > 4000)
                     {
@@ -456,6 +487,43 @@ namespace HLU.UI.ViewModel
                 int rowCount = selectedOnly
                     ? _viewModelMain.SelectedIncidsInGISCount
                     : _viewModelMain.IncidRowCount(false);
+
+                if (isShapefile)
+                {
+                    // Each shapefile component (.shp/.dbf) is limited to 2 GB.
+                    const long maxComponentBytes = 2L * 1024 * 1024 * 1024;
+                    int largeShapefileRowCount = Settings.Default.MaxFeaturesShapefile;
+
+                    long estimatedDbfBytes =
+                        32 + (32L * exportFields.Count) + ((long)rowCount * (_attributesLength + 1));
+
+                    string sizeWarning = null;
+
+                    if (estimatedDbfBytes > maxComponentBytes)
+                    {
+                        sizeWarning =
+                            $"The estimated size of the .dbf file ({estimatedDbfBytes / (1024.0 * 1024 * 1024):F1} GB) " +
+                            "exceeds the 2 GB shapefile limit.";
+                    }
+                    else if (rowCount > largeShapefileRowCount)
+                    {
+                        sizeWarning =
+                            $"The export contains {rowCount:N0} features, so the .shp file may exceed the 2 GB shapefile limit " +
+                            "depending on the geometry complexity.";
+                    }
+
+                    if (sizeWarning != null)
+                    {
+                        MessageBoxResult sizeResult = MessageBox.Show(
+                            sizeWarning + "\n\nConsider exporting to a geodatabase instead.\n\nDo you want to continue anyway?",
+                            "HLU: Export",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Warning);
+
+                        if (sizeResult != MessageBoxResult.Yes)
+                            return;
+                    }
+                }
 
                 // Warn the user if the export is very large.
                 if (rowCount > Settings.Default.MaxFeaturesExport)
