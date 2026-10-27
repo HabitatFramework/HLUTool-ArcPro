@@ -69,6 +69,12 @@ namespace HLU.UI.ViewModel
         private bool _mapMemberEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
         private bool _layersChangedEventsSubscribed;
+        private bool _selectionEventsSubscribed;
+
+        // Set to true whenever the GIS map selection changes (via MapSelectionChangedEvent).
+        // Consumers can check and clear this flag instead of re-querying the GIS selection
+        // to determine whether it has changed since it was last analyzed.
+        private bool _gisSelectionChangedSinceLastAnalysis;
 
         #endregion Fields - Event Tracking
 
@@ -190,6 +196,14 @@ namespace HLU.UI.ViewModel
         #endregion Properties - GIS Info
 
         #region Properties - Selection State
+
+        /// <summary>
+        /// Gets a value indicating whether the GIS map selection has changed (via
+        /// <see cref="MapSelectionChangedEvent"/>) since it was last analyzed. This allows
+        /// callers to avoid re-querying the GIS selection unnecessarily, e.g. before
+        /// starting an export, by checking this flag instead.
+        /// </summary>
+        internal bool GisSelectionChangedSinceLastAnalysis => _gisSelectionChangedSinceLastAnalysis;
 
         /// <summary>
         /// Gets the IDs of the incids currently selected in the map. These are set in
@@ -717,6 +731,32 @@ namespace HLU.UI.ViewModel
 
                 return;
             }
+        }
+
+        /// <summary>
+        /// Handles the ArcGIS Pro <see cref="MapSelectionChangedEvent"/>. Sets a flag indicating
+        /// the GIS selection has changed so that consumers can check (and clear) the flag
+        /// instead of re-querying the GIS selection, e.g. before starting an export.
+        /// </summary>
+        /// <param name="args">Event arguments containing details about the selection change.</param>
+        private void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
+        {
+            // Only care about selection changes on the active map.
+            if (args?.Map == null || MapView.Active?.Map != args.Map)
+                return;
+
+            _gisSelectionChangedSinceLastAnalysis = true;
+        }
+
+        /// <summary>
+        /// Clears the flag that indicates the GIS selection has changed since it was last
+        /// analyzed. Call this after re-reading/analyzing the GIS selection (e.g. in
+        /// AnalyzeGisSelectionSet) so that subsequent checks reflect only changes made
+        /// since that point.
+        /// </summary>
+        internal void ClearGisSelectionChangedFlag()
+        {
+            _gisSelectionChangedSinceLastAnalysis = false;
         }
 
         #endregion GIS Events
@@ -1974,8 +2014,10 @@ namespace HLU.UI.ViewModel
             // Clear any existing messages
             ClearAllMessages();
 
-            // Get the GIS layer selection again (just in case).
-            await GetMapSelectionAsync(false);
+            // Get the GIS layer selection again, but only if it has changed since it
+            // was last analyzed.
+            if (GisSelectionChangedSinceLastAnalysis)
+                await GetMapSelectionAsync(false);
 
             // Check the selected rows are unique before attempting to split them.
             if (!await _gisApp.SelectedRowsUniqueAsync())
@@ -2015,8 +2057,10 @@ namespace HLU.UI.ViewModel
             // Clear any existing messages
             ClearAllMessages();
 
-            // Get the GIS layer selection again (just in case).
-            await GetMapSelectionAsync(false);
+            // Get the GIS layer selection again, but only if it has changed since it
+            // was last analyzed.
+            if (GisSelectionChangedSinceLastAnalysis)
+                await GetMapSelectionAsync(false);
 
             // Create ViewModel for split class.
             ViewModelWindowMainSplit vmSplit = new(this);
@@ -2043,8 +2087,10 @@ namespace HLU.UI.ViewModel
             // Clear any existing messages
             ClearAllMessages();
 
-            // Get the GIS layer selection again (just in case).
-            await GetMapSelectionAsync(false);
+            // Get the GIS layer selection again, but only if it has changed since it
+            // was last analyzed.
+            if (GisSelectionChangedSinceLastAnalysis)
+                await GetMapSelectionAsync(false);
 
             // Check the selected rows are unique before attempting to merge them.
             if (!await _gisApp.SelectedRowsUniqueAsync())
@@ -2083,8 +2129,10 @@ namespace HLU.UI.ViewModel
             // Clear any existing messages
             ClearAllMessages();
 
-            // Get the GIS layer selection again (just in case).
-            await GetMapSelectionAsync(false);
+            // Get the GIS layer selection again, but only if it has changed since it
+            // was last analyzed.
+            if (GisSelectionChangedSinceLastAnalysis)
+                await GetMapSelectionAsync(false);
 
             // Create ViewModel for reassign class.
             ViewModelWindowMainReassign vmReassign = new(this);
@@ -2107,8 +2155,10 @@ namespace HLU.UI.ViewModel
             // Clear any existing messages
             ClearAllMessages();
 
-            // Get the GIS layer selection again (just in case).
-            await GetMapSelectionAsync(false);
+            // Get the GIS layer selection again, but only if it has changed since it
+            // was last analyzed.
+            if (GisSelectionChangedSinceLastAnalysis)
+                await GetMapSelectionAsync(false);
 
             // Check the selected rows are unique before attempting to merge them.
             if (!await _gisApp.SelectedRowsUniqueAsync())
@@ -2197,8 +2247,10 @@ namespace HLU.UI.ViewModel
             // Clear any existing messages.
             ClearAllMessages();
 
-            // Re-read the map selection to ensure it is current.
-            await GetMapSelectionAsync(false);
+            // Re-read the map selection to ensure it is current, but only if it has
+            // changed since it was last analyzed.
+            if (GisSelectionChangedSinceLastAnalysis)
+                await GetMapSelectionAsync(false);
 
             // Delegate to the feature insert view model (implemented in stage 4/5).
             ViewModelWindowMainFeatureInsert vmInsert = new(this);
@@ -2218,8 +2270,10 @@ namespace HLU.UI.ViewModel
             // Clear any existing messages.
             ClearAllMessages();
 
-            // Re-read the map selection to ensure it is current.
-            await GetMapSelectionAsync(false);
+            // Re-read the map selection to ensure it is current, but only if it has
+            // changed since it was last analyzed.
+            if (GisSelectionChangedSinceLastAnalysis)
+                await GetMapSelectionAsync(false);
 
             // Delegate to the feature insert view model (implemented in stage 4/5).
             ViewModelWindowMainFeatureInsert vmInsert = new(this);
@@ -2244,8 +2298,10 @@ namespace HLU.UI.ViewModel
             // Clear any existing messages.
             ClearAllMessages();
 
-            // Re-read the map selection to ensure it is current.
-            await GetMapSelectionAsync(false);
+            // Re-read the map selection to ensure it is current, but only if it has
+            // changed since it was last analyzed.
+            if (GisSelectionChangedSinceLastAnalysis)
+                await GetMapSelectionAsync(false);
 
             // Prompt the user to confirm they have backed up the features before unloading.
             MessageBoxResult result = MessageBox.Show(

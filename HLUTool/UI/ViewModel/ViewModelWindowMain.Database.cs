@@ -3289,6 +3289,11 @@ namespace HLU.UI.ViewModel
         /// <param name="updateIncidSelection">Indicates whether the Incid selection should be updated based on the GIS selection.</param>
         private void AnalyzeGisSelectionSet(bool updateIncidSelection)
         {
+            // The GIS selection has just been (re-)analyzed, so clear the "changed" flag
+            // that is set by OnMapSelectionChanged. Consumers can use this flag to avoid
+            // re-querying the GIS selection unnecessarily.
+            ClearGisSelectionChangedFlag();
+
             _selectedIncidsInGISCount = 0;
             _selectedToidsInGISCount = 0;
             _selectedFragsInGISCount = 0;

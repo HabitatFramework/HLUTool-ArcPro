@@ -156,11 +156,15 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            // Get the GIS layer selection again (just in case), so that the
-            // export dialog and subsequent export both use a consistent, up-to-date
-            // selection cache (matching the pattern used by ReassignFeaturesAsync
-            // and PhysicalMergeAsync).
-            await _viewModelMain.GetMapSelectionAsync(false);
+            // Get the GIS layer selection again, but only if it has actually changed
+            // since it was last analyzed (tracked via MapSelectionChangedEvent). This
+            // avoids an unnecessary re-query of the GIS selection, e.g. when the user
+            // has just selected all filtered incids and immediately starts an export,
+            // while still ensuring the export dialog and subsequent export both use a
+            // consistent, up-to-date selection cache (matching the pattern used by
+            // ReassignFeaturesAsync and PhysicalMergeAsync).
+            if (_viewModelMain.GisSelectionChangedSinceLastAnalysis)
+                await _viewModelMain.GetMapSelectionAsync(false);
 
             // Count features for the dialog display.
             int fragCount = _viewModelMain.GisSelection == null ? 0 : _viewModelMain.GisSelection.Rows.Count;

@@ -92,6 +92,13 @@ public class XmlSettingsManager
         // If the settings file exists, load the settings from the file.
         if (File.Exists(_settingsFile))
         {
+            // Remove any stale, no longer user-configurable nodes left over from
+            // older versions of the settings file, so they don't cause confusion
+            // (they are ignored on load/save regardless, as they are marked
+            // [XmlIgnore] on AddInSettings).
+            RemoveNode(nameof(AddInSettings.HelpURL));
+            RemoveNode(nameof(AddInSettings.HelpPages));
+
             XmlSerializer serializer = new(typeof(AddInSettings));
             using StreamReader reader = new(_settingsFile);
             return (AddInSettings)serializer.Deserialize(reader);
@@ -142,6 +149,10 @@ public class AddInSettings
     [XmlIgnore]
     public string HelpURL { get; set; } = "https://hlutool-arcpro-userguide.readthedocs.io/en/latest/";
 
+    // Help pages — not user-configurable; always uses the code-defined defaults
+    // so anchor updates take effect immediately without needing to edit or
+    // regenerate each user's HLUTool.xml file.
+    [XmlIgnore]
     public HelpPages HelpPages { get; set; } = new();
 
     // Application database options
@@ -202,7 +213,6 @@ public class HelpPages
 {
     // Individual help pages
     public string AppDatabase { get; set; } = "options/options.html#options-app-database";
-
     public string AppDates { get; set; } = "options/options.html#options-app-dates";
     public string AppValidation { get; set; } = "options/options.html#options-app-validation";
     public string AppUpdates { get; set; } = "options/options.html#options-app-updates";
@@ -213,6 +223,6 @@ public class HelpPages
     public string UserUpdates { get; set; } = "options/options.html#options-user-updates";
     public string UserBulkLoad { get; set; } = "options/options.html#options-user-bulk-load";
     public string UserSQL { get; set; } = "options/options.html#options-user-filter";
-    public string UserExport { get; set; } = "options/options.html#options-user-export";
     public string UserHistory { get; set; } = "options/options.html#options-user-history";
+    public string UserExport { get; set; } = "options/options.html#options-user-export";
 }

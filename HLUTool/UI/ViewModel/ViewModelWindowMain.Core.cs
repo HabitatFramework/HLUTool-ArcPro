@@ -1968,18 +1968,21 @@ namespace HLU.UI.ViewModel
                 bool isVersionError = ex is HLUToolException &&
                     (ex.Message.Contains("minimum application version") ||
                      ex.Message.Contains("minimum database version"));
+                bool isDatasetError = ex is HLUToolException &&
+                    ex.Message.Contains("does not contain a valid HLU dataset");
                 bool isUserCancellation = ex is UserCancelledException;
 
-                // Clear the task so a future OnShow can retry for both user cancellations
-                // and version check failures.
-                if (isUserCancellation || isVersionError)
+                // Clear the task so a future OnShow can retry for user cancellations,
+                // version check failures and invalid dataset errors.
+                if (isUserCancellation || isVersionError || isDatasetError)
                 {
                     _initializationTask = null;
                 }
 
-                // Only mark InError for real failures, not user cancellations or version errors.
-                // Version errors and user cancellations should allow retry on next open.
-                if (!isUserCancellation && !isVersionError)
+                // Only mark InError for real (unexpected) failures, not user cancellations,
+                // version errors or invalid dataset errors — these are all "soft" errors
+                // that allow the user to retry (e.g. after fixing the connection settings).
+                if (!isUserCancellation && !isVersionError && !isDatasetError)
                 {
                     InError = true;
                     _initializationException = ex;
@@ -2010,6 +2013,21 @@ namespace HLU.UI.ViewModel
                             $"The HLU Tool cannot be used:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}See {logPath} for details.",
                             "HLU Tool — Version Error");
 
+                        // Close the DockPane so the user isn't left with a broken state.
+                        FrameworkApplication.DockPaneManager.Find(DockPaneID)?.Hide();
+                    });
+                }
+                else if (isDatasetError)
+                {
+                    // The detailed error (and any validation messages) have already been
+                    // shown to the user by OpenDatabaseConnectionAsync, so just log it here
+                    // and close the DockPane without showing a second, generic message box.
+                    string logPath = WriteInitLog($"Dataset validation failed:{Environment.NewLine}{ex.Message}{Environment.NewLine}{new string('-', 80)}");
+
+                    Debug.WriteLine($"[HLUTool] Dataset validation failed:{Environment.NewLine}{ex.Message}");
+
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
                         // Close the DockPane so the user isn't left with a broken state.
                         FrameworkApplication.DockPaneManager.Find(DockPaneID)?.Hide();
                     });
@@ -3279,6 +3297,15 @@ namespace HLU.UI.ViewModel
                     LayersRemovedEvent.Subscribe(OnLayersRemoved);
                 }
 
+                if (!_selectionEventsSubscribed)
+                {
+                    _selectionEventsSubscribed = true;
+
+                    // Subscribe to MapSelectionChangedEvent so consumers can detect that the
+                    // GIS selection has changed without having to re-query it.
+                    MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
+                }
+
                 // Run init if not yet successfully initialised (retry after cancellation
                 // is allowed; retry after a real error is blocked by InError).
                 if (!InError && !_initialised)
@@ -3359,6 +3386,13 @@ namespace HLU.UI.ViewModel
                     LayersAddedEvent.Unsubscribe(OnLayersAdded);
                     LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
                     _layersChangedEventsSubscribed = false;
+                }
+
+                // Unsubscribe from map selection changed events
+                if (_selectionEventsSubscribed)
+                {
+                    MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChanged);
+                    _selectionEventsSubscribed = false;
                 }
             }
             catch (Exception ex)
