@@ -69,6 +69,10 @@ namespace HLU.UI.ViewModel
         private string _osmmUpdateWhereClause;
         private SqlFilterCondition _incidMMShadowIncidFilter;
 
+        // Tracks whether the cached 'any OSMM updates' result needs to be re-queried.
+        private bool _osmmUpdatesCheckDirty = true;
+        private string _osmmUpdatesCheckedSiteID;
+
         #endregion Fields - Selection Filters
 
         #region Fields - Validation Lists
@@ -2744,16 +2748,35 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         internal async Task CheckAnyOSMMUpdatesAsync(CancellationToken cancellationToken = default)
         {
+            // Skip the database query if the result is still valid for the current site
+            // (the count is per SiteID, which changes with the active layer geometry type).
+            string siteId = _recIDs?.SiteID?.ToString();
+            if (!_osmmUpdatesCheckDirty && _anyOSMMUpdates != null &&
+                string.Equals(_osmmUpdatesCheckedSiteID, siteId, StringComparison.Ordinal))
+                return;
+
             // Count the number of OSMM updates.
             int rowCount = await CountOSMMUpdatesAsync(cancellationToken).ConfigureAwait(false);
 
             // Set the property to true if there are any, and false otherwise.
             _anyOSMMUpdates = rowCount > 0;
+            _osmmUpdatesCheckedSiteID = siteId;
+            _osmmUpdatesCheckDirty = false;
             OnPropertyChanged(nameof(AnyOSMMUpdates));
         }
 
         /// <summary>
-        /// Counts incid OSMM updates in the database
+        /// Marks the cached <see cref="AnyOSMMUpdates"/> result as stale so that the next call to
+        /// <see cref="CheckAnyOSMMUpdatesAsync"/> re-queries the database. Call this after any
+        /// operation that adds or removes rows in the OSMM updates table (e.g. bulk load/unload).
+        /// </summary>
+        internal void InvalidateOSMMUpdatesCheck()
+        {
+            _osmmUpdatesCheckDirty = true;
+        }
+
+        /// <summary>
+        /// Counts incid OSMM updates in the database for the current site ID.
         /// </summary>
         /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the count of OSMM updates.</returns>

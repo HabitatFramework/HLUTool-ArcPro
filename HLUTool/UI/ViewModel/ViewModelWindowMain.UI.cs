@@ -115,8 +115,8 @@ namespace HLU.UI.ViewModel
 
         // OSMM UI State display fields
         private string _osmmAcceptTag = "A_ccept";
-
         private string _osmmRejectTag = "Re_ject";
+
         private Nullable<bool> _anyOSMMUpdates;
         private bool _osmmUpdatesEmpty = false;
 

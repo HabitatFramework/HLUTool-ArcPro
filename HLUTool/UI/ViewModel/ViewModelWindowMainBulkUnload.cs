@@ -582,9 +582,19 @@ namespace HLU.UI.ViewModel
                 // If any features were unloaded, refresh the map selection and update the UI accordingly.
                 if (totalFeaturesUnloaded > 0)
                 {
+                    // The unload may have removed OSMM update rows.
+                    _viewModelMain.InvalidateOSMMUpdatesCheck();
+
+                    // Update the incident row count
                     _viewModelMain.IncidRowCount(true);
+
+                    // Clear any active filters to ensure the UI reflects the current state of the data.
                     await _viewModelMain.ClearFilterAsync(false);
+
+                    // Set the flag to refill the incid table
                     _viewModelMain.RefillIncidTable = true;
+
+                    // Refresh the map selection to reflect the changes made during the unload operation.
                     await _viewModelMain.GetMapSelectionAsync(false);
                 }
 

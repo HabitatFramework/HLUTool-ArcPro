@@ -749,7 +749,10 @@ namespace HLU.UI.ViewModel
                 // the current map selection.
                 if (loadSuccess)
                 {
-                    // Update the INCID row count in the main view model to reflect the new data.
+                    // The load may have added OSMM update rows.
+                    _viewModelMain.InvalidateOSMMUpdatesCheck();
+
+                    // Update the INCID row count
                     _viewModelMain.IncidRowCount(true);
 
                     // Clear any filters in the main view model to ensure that all data is visible.
