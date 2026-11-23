@@ -2174,7 +2174,42 @@ namespace HLU.UI.ViewModel
         /// <exception cref="UserCancelledException">Thrown if the user cancelled the connection process.</exception>
         private async Task OpenDatabaseConnectionAsync()
         {
-            if ((_db = await DbFactory.CreateConnectionAsync(DbConnectionTimeout)) == null)
+            while (true)
+            {
+                try
+                {
+                    _db = await DbFactory.CreateConnectionAsync(DbConnectionTimeout);
+
+                    // The constructor does not open the connection (and schema lookups
+                    // swallow errors), so verify the database is reachable here.
+                    if (_db?.Connection != null)
+                    {
+                        _db.Connection.Open();
+                        _db.Connection.Close();
+                    }
+                    break;
+                }
+                catch (Exception ex) when (ex is not UserCancelledException)
+                {
+                    WriteInitLog($"Database connection failed:{Environment.NewLine}{ex}{Environment.NewLine}{new string('-', 80)}");
+
+                    // The stored database may no longer be available, so let the user
+                    // choose a different connection rather than failing to start.
+                    if (MessageBox.Show(
+                        $"The HLU Tool could not connect to the database:\n\n{ex.Message}\n\n" +
+                        "Would you like to select a different database connection?",
+                        "HLU: Database Connection",
+                        MessageBoxButton.YesNo, MessageBoxImage.Exclamation) != MessageBoxResult.Yes)
+                        throw new UserCancelledException();
+
+                    DbFactory.ClearSettings();
+
+                    if (!await DbFactory.GetConnectionSettingsAsync())
+                        throw new UserCancelledException();
+                }
+            }
+
+            if (_db == null)
                 throw new UserCancelledException();
 
             _hluDS = new HluDataSet();
@@ -2183,7 +2218,7 @@ namespace HLU.UI.ViewModel
             if (!_db.ContainsDataSet(_hluDS, out errorMessage))
             {
                 // Handle any error message returned from the dataset validation.
-                if (errorMessage.Length > 200)
+                if (errorMessage != null && errorMessage.Length > 200)
                 {
                     if (MessageBox.Show("There were errors loading data from the database." +
                         "\n\nWould like to see a list of those errors?", "HLU: Initialise Dataset",

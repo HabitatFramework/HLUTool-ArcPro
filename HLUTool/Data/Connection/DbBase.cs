@@ -504,7 +504,8 @@ namespace HLU.Data.Connection
             where C : DbConnection
             where T : DbTransaction
         {
-            if (_schemaRestrictions.TryGetValue(collectionName, out string[] restrictionNames))
+            if (_schemaRestrictions != null &&
+                _schemaRestrictions.TryGetValue(collectionName, out string[] restrictionNames))
             {
                 string[] restrictions = new string[restrictionNames.Length];
                 int restrictionPosition = Array.IndexOf(restrictionNames, restrictionName);
@@ -554,7 +555,8 @@ namespace HLU.Data.Connection
                 }
                 else
                 {
-                    if (!_schemaRestrictions.TryGetValue(collectionName, out string[] restrictionNames) ||
+                    if (_schemaRestrictions == null ||
+                        !_schemaRestrictions.TryGetValue(collectionName, out string[] restrictionNames) ||
                         (restrictionValues.Length == restrictionNames.Length))
                     {
                         dt = connection.GetSchema(collectionName, restrictionValues);
